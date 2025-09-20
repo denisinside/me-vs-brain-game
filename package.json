@@ -1,0 +1,13 @@
+{
+  "name": "me-vs-brain-game",
+  "version": "1.0.0",
+  "description": "A multimedia game for university project",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8000 -o",
+    "dev": "http-server -p 8000 -o -c-1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

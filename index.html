@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Me vs My Brain: Прототип</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Відео-фон, який ми будемо змінювати через JS -->
+    <video id="game-video" src="assets/videos/idle.mp4" autoplay muted loop playsinline></video>
+
+    <!-- UI, що накладається поверх відео -->
+    <div id="ui-overlay">
+
+        <!-- 1. Стартовий екран -->
+        <div id="start-screen" class="screen">
+            <div class="screen-content">
+                <h1>Me vs My Brain</h1>
+                <div id="prologue">
+                    <p>Студент Денис прокинувся о 2 ночі з жахливим усвідомленням...</p>
+                    <p>Дедлайн завдання з "Технологій мультимедіа" через годину!</p>
+                    <p>Треба зосередитись і зробити все за цей час.</p>
+                    <p>Але його мозок має інші плани...</p>
+                </div>
+                <button id="start-button">Почати боротьбу!</button>
+            </div>
+        </div>
+
+        <!-- 2. Ігровий інтерфейс (HUD) -->
+        <div id="game-hud" class="screen hidden">
+            <div class="top-bar">
+                <div class="stat">
+                    <span>Час до дедлайну:</span>
+                    <b id="timer-display">03:00</b>
+                </div>
+                <div class="stat">
+                    <span>Прогрес завдання:</span>
+                    <b id="progress-display">0%</b>
+                </div>
+                <div class="stat">
+                    <span>Фокус:</span>
+                    <b id="focus-display">100%</b>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-label">Прогрес завдання</div>
+                <div id="progress-bar-fill"></div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-label">Фокус</div>
+                <div id="focus-bar-fill"></div>
+            </div>
+
+            <div id="event-popup" class="hidden">
+                <p id="event-text"></p>
+            </div>
+
+            <div class="controls">
+                <button id="work-button">Працювати (натискай!)</button>
+            </div>
+        </div>
+
+        <!-- 3. Екран завершення гри -->
+        <div id="end-screen" class="screen hidden">
+            <div class="screen-content">
+                <h2 id="end-message"></h2>
+                <p id="end-details"></p>
+                <button id="restart-button">Спробувати ще раз</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="js/main.js" type="module"></script>
+</body>
+</html>
