@@ -7,73 +7,121 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<div id="game-container">
-    <!-- Відео-фон, який ми будемо змінювати через JS -->
-    <video id="game-video" src="assets/videos/idle.mp4" autoplay muted loop playsinline></video>
-
-    <!-- UI, що накладається поверх відео -->
-    <div id="ui-overlay">
-
-        <!-- 1. Стартовий екран -->
-        <div id="start-screen" class="screen">
-            <div class="screen-content">
-                <h1>Me vs My Brain</h1>
-                <div id="prologue">
-                    <p>Студент Денис прокинувся о 2 ночі з жахливим усвідомленням...</p>
-                    <p>Дедлайн завдання з "Технологій мультимедіа" через годину!</p>
-                    <p>Треба зосередитись і зробити все за цей час.</p>
-                    <p>Але його мозок має інші плани...</p>
-                </div>
-                <button id="start-button">Почати боротьбу!</button>
+<div id="app">
+    <div id="start-screen" class="screen overlay">
+        <div class="screen-content">
+            <h1>Me vs My Brain</h1>
+            <div id="prologue">
+                <p>Студент Денис прокинувся о 2 ночі з жахливим усвідомленням...</p>
+                <p>Дедлайн завдання з "Технологій мультимедіа" через годину!</p>
+                <p>Треба зосередитись і зробити все за цей час.</p>
+                <p>Але його мозок має інші плани...</p>
             </div>
+            <button id="start-button">Почати боротьбу!</button>
         </div>
+    </div>
 
-        <!-- 2. Ігровий інтерфейс (HUD) -->
-        <div id="game-hud" class="screen hidden">
-            <div class="top-bar">
-                <div class="stat">
-                    <span>Час до дедлайну:</span>
-                    <b id="timer-display">03:00</b>
-                </div>
-                <div class="stat">
-                    <span>Прогрес завдання:</span>
-                    <b id="progress-display">0%</b>
-                </div>
-                <div class="stat">
-                    <span>Фокус:</span>
-                    <b id="focus-display">100%</b>
-                </div>
-            </div>
-
-            <div class="progress-bar-container">
-                <div class="progress-label">Прогрес завдання</div>
-                <div id="progress-bar-fill"></div>
-            </div>
-
-            <div class="progress-bar-container">
-                <div class="progress-label">Фокус</div>
-                <div id="focus-bar-fill"></div>
-            </div>
-
-            <div id="event-popup" class="hidden">
-                <p id="event-text"></p>
-            </div>
-
-            <div class="controls">
-                <button id="work-button">Працювати (натискай!)</button>
-            </div>
+    <div id="end-screen" class="screen overlay hidden">
+        <div class="screen-content">
+            <h2 id="end-message"></h2>
+            <div id="end-details"></div>
+            <button id="restart-button">Спробувати ще раз</button>
         </div>
+    </div>
 
-        <!-- 3. Екран завершення гри -->
-        <div id="end-screen" class="screen hidden">
-            <div class="screen-content">
-                <h2 id="end-message"></h2>
-                <p id="end-details"></p>
-                <button id="restart-button">Спробувати ще раз</button>
-            </div>
+    <div id="event-popup" class="event-popup hidden">
+        <p id="event-text"></p>
+    </div>
+
+    <button id="pause-button" class="pause-button" title="Пауза">
+        <img src="assets/images/pause.png" alt="Пауза">
+    </button>
+
+    <div id="game-shell" class="game-shell hidden">
+        <div class="game-container">
+            <aside class="sidebar">
+                <h3>Думки в голові</h3>
+                <div class="thought-bubble" id="thought-1">
+                    <p>Може, забити на це і піти спати?</p>
+                </div>
+                <div class="thought-bubble" id="thought-2">
+                    <p>Ще є час, подивлюся поки що меми.</p>
+                </div>
+                <div class="thought-bubble" id="thought-3">
+                    <p>АААА! Я нічого не встигаю!</p>
+                </div>
+                <div class="thought-bubble" id="thought-4">
+                    <p>У мене чемоданне настроєніє! Не хочу вчитись!</p>
+                </div>
+                <div class="avatar-card">
+                    <img src="assets/images/student-avatar.gif" alt="Студент Денис">
+                </div>
+            </aside>
+
+            <main class="main-area" id="game-hud">
+                <header class="status-panel">
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <img src="assets/images/deadline.png" alt="Дедлайн">
+                        </div>
+                        <div class="status-content">
+                            <div class="status-title">
+                                <span>Дедлайн</span>
+                                <span id="timer-display">03:00</span>
+                            </div>
+                            <div class="status-track">
+                                <div class="status-fill deadline" id="deadline-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <img src="assets/images/progress.png" alt="Прогрес">
+                        </div>
+                        <div class="status-content">
+                            <div class="status-title">
+                                <span>Прогрес</span>
+                                <span id="progress-display">0%</span>
+                            </div>
+                            <div class="status-track">
+                                <div class="status-fill progress" id="progress-bar-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                        <div class="status-card">
+                        <div class="status-icon">
+                            <img src="assets/images/progress.png" alt="Фокус">
+                        </div>
+                        <div class="status-content">
+                            <div class="status-title">
+                                <span>Фокус</span>
+                                <span id="focus-display">100%</span>
+                            </div>
+                            <div class="status-track">
+                                <div class="status-fill focus" id="focus-bar-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <section class="media-panel">
+                    <div class="video-frame">
+                        <video id="game-video" src="assets/videos/idle.mp4" autoplay muted loop playsinline></video>
+                    </div>
+                </section>
+
+                <section class="action-panel">
+                    <div class="task-box" id="task-box">
+                        Натискай кнопку "Працювати", щоб розпочати!
+                    </div>
+                    <div class="controls">
+                        <button id="work-button">Працювати (натискай!)</button>
+                    </div>
+                </section>
+            </main>
         </div>
-
     </div>
 </div>
 

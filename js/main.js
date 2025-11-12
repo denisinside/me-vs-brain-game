@@ -1,326 +1,484 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ОТРИМАННЯ ЕЛЕМЕНТІВ DOM ---
+    // --- DOM REFERENCES ---
     const videoPlayer = document.getElementById('game-video');
-
-    // Екрани
     const startScreen = document.getElementById('start-screen');
-    const gameHud = document.getElementById('game-hud');
     const endScreen = document.getElementById('end-screen');
+    const gameShell = document.getElementById('game-shell');
 
-    // Кнопки
     const startButton = document.getElementById('start-button');
     const workButton = document.getElementById('work-button');
     const restartButton = document.getElementById('restart-button');
+    const pauseButton = document.getElementById('pause-button');
 
-    // UI Елементи
     const timerDisplay = document.getElementById('timer-display');
     const progressDisplay = document.getElementById('progress-display');
     const progressBarFill = document.getElementById('progress-bar-fill');
+    const deadlineBar = document.getElementById('deadline-bar');
+    const focusDisplay = document.getElementById('focus-display');
+    const focusBarFill = document.getElementById('focus-bar-fill');
+
+    const taskBox = document.getElementById('task-box');
     const eventPopup = document.getElementById('event-popup');
     const eventText = document.getElementById('event-text');
     const endMessage = document.getElementById('end-message');
     const endDetails = document.getElementById('end-details');
 
-    // --- НАЛАШТУВАННЯ ГРИ ---
+    const thoughtIds = ['thought-1', 'thought-2', 'thought-3', 'thought-4'];
+    const thoughtElements = thoughtIds
+        .map((id) => document.getElementById(id))
+        .filter(Boolean);
+
+    // --- GAME CONSTANTS ---
     const GAME_DURATION_SECONDS = 180; // 3 хвилини
-    const PROGRESS_PER_CLICK = 1; // % прогресу за один клік
-    const EVENT_CHANCE_PER_SECOND = 0.05; // 10% шанс на подію кожну секунду
-    const FOCUS_DECAY_RATE = 10; // Наскільки швидко зменшується фокус
-    const FOCUS_RECOVERY_RATE = 20; // Наскільки швидко відновлюється фокус
-    const PHONE_DISTRACTION_THRESHOLD = 20; // При якому рівні фокусу можна залізти в телефон
+    const PROGRESS_PER_CLICK = 0.5;
+    const EVENT_CHANCE_PER_SECOND = 0.05;
+    const FOCUS_DECAY_RATE = 0.6;
+    const FOCUS_RECOVERY_RATE = 1.8;
+    const FOCUS_CLICK_PENALTY = 0.35;
+    const PHONE_DISTRACTION_THRESHOLD = 25;
+    const PHONE_ESCAPE_CLICKS = 12;
 
-    // --- ЗМІННІ СТАНУ ГРИ ---
-    let progress = 0;
-    let timeLeft = GAME_DURATION_SECONDS;
-    let focus = 100; // Новий показник фокусу (0-100)
-    let gameLoopInterval = null;
-    let isEventActive = false;
-    let isWorking = false;
-    let isPhoneDistracted = false; // Чи зараз студент в телефоні
+    // --- GAME STATE ---
+    const state = {
+        progress: 0,
+        timeLeft: GAME_DURATION_SECONDS,
+        focus: 100,
+        gameLoopInterval: null,
+        isEventActive: false,
+        isWorking: false,
+        isPhoneDistracted: false,
+        isPaused: false,
+        phoneClicksRemaining: 0,
+        eventMessage: null, // Повідомлення про поточну подію
+    };
 
-    // --- ОСНОВНІ ФУНКЦІЇ ГРИ ---
+    // --- UTILITIES ---
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-    // Функція для перемикання відео
-    function switchVideo(src, loop = false) {
-        // *** ЗМІНА ***: Перевіряємо, чи не намагаємось ми запустити те саме відео
-        // Це запобігає "миготінню" відео при повторному виклику
-        const currentVideoName = videoPlayer.src.split('/').pop();
-        if (currentVideoName === src) return;
+    const formatTime = (totalSeconds) => {
+        const clamped = Math.max(0, totalSeconds);
+        const minutes = Math.floor(clamped / 60);
+        const seconds = clamped % 60;
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    };
 
-        videoPlayer.src = `assets/videos/${src}`;
-        videoPlayer.loop = loop;
-        videoPlayer.play();
-    }
+    const setPause = (value) => {
+        state.isPaused = value;
+        if (value) {
+            videoPlayer.pause();
+            pauseButton.classList.add('paused');
+            workButton.disabled = true;
+        } else {
+            pauseButton.classList.remove('paused');
+            if (!state.isEventActive && !state.isPhoneDistracted && state.progress < 100) {
+                workButton.disabled = false;
+            }
+            videoPlayer.play().catch(() => {});
+        }
+        updateUI();
+    };
 
-    // Оновлення інтерфейсу (таймер, прогрес бар, фокус)
-    function updateUI() {
-        const minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
-        seconds = seconds < 10 ? '0' + seconds : seconds;
-        timerDisplay.textContent = `${minutes}:${seconds}`;
+    const togglePauseVisibility = (show) => {
+        if (show) {
+            pauseButton.classList.add('visible');
+        } else {
+            pauseButton.classList.remove('visible');
+            pauseButton.classList.remove('paused');
+        }
+    };
 
-        progressDisplay.textContent = `${progress}%`;
-        progressBarFill.style.width = `${progress}%`;
+    // --- VISUAL UPDATES ---
+    const updateMeters = () => {
+        const deadlinePercent = (state.timeLeft / GAME_DURATION_SECONDS) * 100;
+        if (deadlineBar) {
+            deadlineBar.style.width = `${clamp(deadlinePercent, 0, 100)}%`;
+            deadlineBar.classList.toggle('warning', deadlinePercent <= 35 && deadlinePercent > 15);
+            deadlineBar.classList.toggle('danger', deadlinePercent <= 15);
+        }
 
-        // Оновлюємо показник фокусу
-        const focusDisplay = document.getElementById('focus-display');
-        const focusBar = document.getElementById('focus-bar-fill');
+        if (timerDisplay) {
+            timerDisplay.textContent = formatTime(state.timeLeft);
+        }
+
+        if (progressDisplay) {
+            progressDisplay.textContent = `${state.progress}%`;
+        }
+        if (progressBarFill) {
+            progressBarFill.style.width = `${clamp(state.progress, 0, 100)}%`;
+        }
+
         if (focusDisplay) {
-            focusDisplay.textContent = `${Math.round(focus)}%`;
+            focusDisplay.textContent = `${Math.round(state.focus)}%`;
         }
-        if (focusBar) {
-            focusBar.style.width = `${focus}%`;
+        if (focusBarFill) {
+            focusBarFill.style.width = `${clamp(state.focus, 0, 100)}%`;
+            focusBarFill.classList.toggle('warning', state.focus <= 55 && state.focus > 30);
+            focusBarFill.classList.toggle('danger', state.focus <= 30);
         }
+    };
 
-        // Змінюємо колір фокусу залежно від рівня
-        if (focusBar) {
-            if (focus > 60) {
-                focusBar.style.backgroundColor = '#4CAF50'; // Зелений
-            } else if (focus > 30) {
-                focusBar.style.backgroundColor = '#FF9800'; // Помаранчевий
+    const updateThoughts = () => {
+        if (thoughtElements.length < 4) return;
+
+        const [ideaOne, ideaTwo, ideaThree, ideaFour] = thoughtElements;
+        if (ideaOne) {
+            if (state.progress < 25) {
+                ideaOne.textContent = 'Може, забити на це й піти спати?';
+            } else if (state.progress < 60) {
+                ideaOne.textContent = 'Робота просувається, але це ще не фініш...';
+            } else if (state.progress < 90) {
+                ideaOne.textContent = 'Ще трохи і можна буде відправляти!';
             } else {
-                focusBar.style.backgroundColor = '#F44336'; // Червоний
+                ideaOne.textContent = 'Все! Ще одне зусилля і можна святкувати!';
             }
         }
-    }
 
-    // Відволікання на телефон
-    function triggerPhoneDistraction() {
-        isPhoneDistracted = true;
-        isEventActive = true;
-        workButton.disabled = true;
-        workButton.textContent = "Вийди з телефона! (швидко клікай!)";
-        
-        eventText.textContent = "Ти заліз в телефон! Швидко клікай кнопку, щоб вийти!";
-        eventPopup.classList.remove('hidden');
-        
+        if (ideaTwo) {
+            if (state.isEventActive) {
+                ideaTwo.textContent = 'Чому всі навколо заважають мені працювати?!';
+            } else if (state.isPhoneDistracted) {
+                ideaTwo.textContent = 'Лише один рілз... і ще один... Ой!';
+            } else if (state.focus < 35) {
+                ideaTwo.textContent = 'Мені потрібна кава. Прямо зараз.';
+            } else {
+                ideaTwo.textContent = 'Може, дозволити собі маленьку перерву?';
+            }
+        }
+
+        if (ideaThree) {
+            if (state.timeLeft <= 60) {
+                ideaThree.textContent = 'Терміново! Залишилась хвилина!';
+            } else if (state.timeLeft <= 120) {
+                ideaThree.textContent = 'Час летить, треба прискоритись!';
+            } else {
+                ideaThree.textContent = 'Ще є час, але краще не розслаблятись.';
+            }
+        }
+
+        if (ideaFour) {
+            if (state.focus <= 25) {
+                ideaFour.textContent = 'Мій мозок офіційно відмовився працювати.';
+            } else if (state.focus <= 55) {
+                ideaFour.textContent = 'Зібратись. Видих. У мене все вийде!';
+            } else {
+                ideaFour.textContent = 'Я в зоні! Ніяких соцмереж!';
+            }
+        }
+    };
+
+    const updateTaskBox = () => {
+        if (!taskBox) return;
+        taskBox.classList.remove('warning', 'danger', 'event');
+
+        if (state.isPaused) {
+            taskBox.textContent = 'Пауза. Зроби ковток води та повернись до битви.';
+            taskBox.classList.add('warning');
+            return;
+        }
+
+        if (state.isPhoneDistracted) {
+            taskBox.textContent = `ВИЙДИ З ТЕЛЕФОНА! Залишилось кліків: ${state.phoneClicksRemaining}`;
+            taskBox.classList.add('danger');
+            return;
+        }
+
+        if (state.eventMessage) {
+            taskBox.textContent = state.eventMessage;
+            taskBox.classList.add('event');
+            return;
+        }
+
+        if (state.progress >= 100) {
+            taskBox.textContent = 'Завдання готове! Натисни кнопку, щоб відправити його.';
+            taskBox.classList.remove('warning', 'danger');
+            return;
+        }
+
+        const timeHint = state.timeLeft <= 45 ? 'Поспішай!' : 'Продовжуй у тому ж темпі!';
+        const focusHint = state.focus < 40 ? 'Фокус падає, зроби глибокий вдих.' : 'Фокус тримається.';
+        taskBox.textContent = `Прогрес: ${state.progress}% • Фокус: ${Math.round(state.focus)}% • Час: ${formatTime(state.timeLeft)} • ${timeHint} ${focusHint}`;
+
+        if (state.timeLeft <= 45 || state.focus <= 35) {
+            taskBox.classList.add(state.timeLeft <= 25 ? 'danger' : 'warning');
+        }
+    };
+
+    const updateUI = () => {
+        updateMeters();
+        updateThoughts();
+        updateTaskBox();
+    };
+
+    const switchVideo = (src, loop = false) => {
+        if (!videoPlayer) return;
+        const desired = `assets/videos/${src}`;
+        const current = videoPlayer.getAttribute('src');
+        if (current === desired) {
+            if (!state.isPaused) {
+                videoPlayer.play().catch(() => {});
+            }
+            return;
+        }
+
+        videoPlayer.pause();
+        videoPlayer.src = desired;
+        videoPlayer.loop = loop;
+        videoPlayer.currentTime = 0;
+        const playVideo = () => {
+            if (!state.isPaused) {
+                videoPlayer.play().catch(() => {});
+            }
+            videoPlayer.removeEventListener('loadeddata', playVideo);
+        };
+        videoPlayer.addEventListener('loadeddata', playVideo);
+    };
+
+    // --- GAMEPLAY LOGIC ---
+    const triggerPhoneDistraction = () => {
+        state.isPhoneDistracted = true;
+        state.isEventActive = true;
+        state.phoneClicksRemaining = PHONE_ESCAPE_CLICKS;
+        state.eventMessage = 'Ти заліз у телефон! Швидко клацай, щоб вирватись!';
+        workButton.textContent = 'Тікай з телефона!';
+
         switchVideo('distraction.mp4');
-        
-        // Потрібно швидко клікати, щоб вийти
-        let clicksNeeded = 10;
-        let clicksDone = 0;
-        
-        workButton.onclick = () => {
-            clicksDone++;
-            if (clicksDone >= clicksNeeded) {
-                focus = Math.min(100, focus + 20); // Відновлюємо трохи фокусу
-                isPhoneDistracted = false;
-                isEventActive = false;
-                workButton.disabled = false;
-                workButton.textContent = "Працювати (натискай!)";
-                workButton.onclick = null; // Очищуємо обробник
-                eventPopup.classList.add('hidden');
+
+        const escapeHandler = () => {
+            if (!state.isPhoneDistracted) return;
+            state.phoneClicksRemaining -= 1;
+            if (state.phoneClicksRemaining <= 0) {
+                state.phoneClicksRemaining = 0;
+                state.focus = clamp(state.focus + 22, 0, 100);
+                state.isPhoneDistracted = false;
+                state.isEventActive = false;
+                state.eventMessage = null;
+                workButton.disabled = state.progress >= 100 || state.isPaused;
+                workButton.textContent = 'Працювати (натискай!)';
+                workButton.onclick = null;
                 switchVideo('idle.mp4', true);
             } else {
-                eventText.textContent = `Вийди з телефона! (${clicksNeeded - clicksDone} кліків залишилось)`;
+                state.eventMessage = `Телефон тримає! Залишилось кліків: ${state.phoneClicksRemaining}`;
             }
+            updateUI();
         };
-    }
 
-    // Запуск випадкової події
-    function triggerRandomEvent() {
-        if (isEventActive || isWorking) return; // Не запускати подію під час роботи
+        workButton.onclick = escapeHandler;
+        updateUI();
+    };
+
+    const triggerRandomEvent = () => {
+        if (state.isEventActive || state.isWorking || state.isPaused) return;
 
         const events = [
-            { 
-                text: "Кіт стрибнув на стіл і розкидав папірці! -10 секунд", 
-                video: "distraction.mp4", 
-                duration: 4000, 
+            {
+                text: 'Кіт стрибнув на стіл і розкидав папірці! -10 секунд',
+                video: 'distraction.mp4',
+                duration: 4000,
                 penalty: 10,
-                focusLoss: 5
+                focusLoss: 6,
             },
-            { 
-                text: "Друг надіслав рілз! Ти не можеш не подивитись... -15 секунд", 
-                video: "distraction.mp4", 
-                duration: 5000, 
+            {
+                text: 'Друг надіслав рілз! Ти не можеш не подивитись... -15 секунд',
+                video: 'distraction.mp4',
+                duration: 5000,
                 penalty: 15,
-                focusLoss: 8
+                focusLoss: 9,
             },
-            { 
-                text: "Сусідка-бабка стучить у двері! Вона хоче сіль... -20 секунд", 
-                video: "distraction.mp4", 
-                duration: 6000, 
+            {
+                text: 'Сусідка-бабка стукає у двері: терміново потрібна сіль! -20 секунд',
+                video: 'distraction.mp4',
+                duration: 6000,
                 penalty: 20,
-                focusLoss: 10
+                focusLoss: 12,
             },
-            { 
-                text: "З'явилось повідомлення про нову серію улюбленого серіалу! -12 секунд", 
-                video: "distraction.mp4", 
-                duration: 4500, 
+            {
+                text: 'Вийшла нова серія улюбленого аніме! -12 секунд',
+                video: 'distraction.mp4',
+                duration: 4500,
                 penalty: 12,
-                focusLoss: 6
+                focusLoss: 7,
             },
-            { 
-                text: "Телефон розрядився! Ти встаєш за зарядкою і спотикаєшся... -8 секунд", 
-                video: "distraction.mp4", 
-                duration: 3000, 
+            {
+                text: 'Телефон розрядився! Пошуки зарядки забрали час... -8 секунд',
+                video: 'distraction.mp4',
+                duration: 3200,
                 penalty: 8,
-                focusLoss: 3
-            }
+                focusLoss: 4,
+            },
         ];
 
         const eventData = events[Math.floor(Math.random() * events.length)];
-
-        isEventActive = true;
+        state.isEventActive = true;
+        state.eventMessage = eventData.text;
         workButton.disabled = true;
 
-        eventText.textContent = eventData.text;
-        eventPopup.classList.remove('hidden');
-
+        state.timeLeft = clamp(state.timeLeft - eventData.penalty, 0, GAME_DURATION_SECONDS);
+        state.focus = clamp(state.focus - eventData.focusLoss, 0, 100);
         switchVideo(eventData.video);
-        timeLeft -= eventData.penalty;
-        focus -= eventData.focusLoss; // Втрачаємо фокус через подію
-        if (timeLeft < 0) timeLeft = 0;
-        if (focus < 0) focus = 0;
+        updateUI();
 
         setTimeout(() => {
             switchVideo('idle.mp4', true);
-            eventPopup.classList.add('hidden');
-            workButton.disabled = false;
-            isEventActive = false;
-            isWorking = false;
+            state.isEventActive = false;
+            state.eventMessage = null;
+            workButton.disabled = state.progress >= 100 || state.isPaused || state.isPhoneDistracted;
             updateUI();
         }, eventData.duration);
-    }
+    };
 
-    // Головний ігровий цикл (виконується кожну секунду)
-    function gameLoop() {
-        timeLeft--;
-        
-        // Логіка фокусу
-        if (!isPhoneDistracted) {
-            focus -= FOCUS_DECAY_RATE;
-            if (focus < 0) focus = 0;
-            
-            // Перевіряємо, чи не потрібно залізти в телефон
-            if (focus <= PHONE_DISTRACTION_THRESHOLD && Math.random() < 0.3) {
+    const endGame = (isWin) => {
+        clearInterval(state.gameLoopInterval);
+        state.gameLoopInterval = null;
+        state.isEventActive = true;
+        state.isPhoneDistracted = false;
+        state.isWorking = false;
+        state.isPaused = false;
+        state.phoneClicksRemaining = 0;
+        state.eventMessage = null;
+
+        workButton.disabled = true;
+        workButton.onclick = null;
+        togglePauseVisibility(false);
+        switchVideo('idle.mp4', true);
+        updateUI();
+
+        if (isWin) {
+            endMessage.textContent = '🎉 Перемога! 🎉';
+            endDetails.innerHTML = `
+                <p>Денис встиг здати завдання за ${formatTime(GAME_DURATION_SECONDS - state.timeLeft)}.</p>
+                <p>Він переміг свій мозок і довів, що дедлайни йому не страшні.</p>
+                <p>Професор у захваті, а Денис заслужив відпочинок.</p>
+            `;
+        } else {
+            endMessage.textContent = '💀 Дедлайн! 💀';
+            endDetails.innerHTML = `
+                <p>Денис не встиг... Завдання виконано лише на ${state.progress}%.</p>
+                <p>Мозок переміг, відволікаючи котиками, рілзами та сусідами.</p>
+                <p>Професор невдоволений, але шанс виправити ситуацію ще буде.</p>
+            `;
+        }
+
+        endScreen.classList.remove('hidden');
+    };
+
+    const gameLoop = () => {
+        if (state.isPaused) {
+            updateUI();
+            return;
+        }
+
+        state.timeLeft -= 1;
+        if (!state.isPhoneDistracted) {
+            state.focus = clamp(state.focus - FOCUS_DECAY_RATE, 0, 100);
+            if (state.focus <= PHONE_DISTRACTION_THRESHOLD && Math.random() < 0.35) {
                 triggerPhoneDistraction();
             }
         } else {
-            // Відновлюємо фокус під час відволікання
-            focus += FOCUS_RECOVERY_RATE;
-            if (focus > 100) {
-                focus = 100;
-                isPhoneDistracted = false;
-                workButton.disabled = false;
-                workButton.textContent = "Працювати (натискай!)";
-                switchVideo('idle.mp4', true);
-            }
+            state.focus = clamp(state.focus + FOCUS_RECOVERY_RATE, 0, 100);
         }
-        
+
         updateUI();
 
-        if (timeLeft <= 0) {
+        if (state.timeLeft <= 0) {
             endGame(false);
             return;
         }
 
-        if (Math.random() < EVENT_CHANCE_PER_SECOND && !isPhoneDistracted) {
+        if (!state.isPhoneDistracted && Math.random() < EVENT_CHANCE_PER_SECOND) {
             triggerRandomEvent();
         }
-    }
+    };
 
-    // Завершення гри
-    function endGame(isWin) {
-        clearInterval(gameLoopInterval);
-        isEventActive = true;
+    const resetGameState = () => {
+        state.progress = 0;
+        state.timeLeft = GAME_DURATION_SECONDS;
+        state.focus = 100;
+        state.isEventActive = false;
+        state.isWorking = false;
+        state.isPhoneDistracted = false;
+        state.isPaused = false;
+        state.phoneClicksRemaining = 0;
+        state.eventMessage = null;
 
-        gameHud.classList.add('hidden');
-        endScreen.classList.remove('hidden');
+        workButton.disabled = false;
+        workButton.textContent = 'Працювати (натискай!)';
+        workButton.onclick = null;
+        pauseButton.disabled = false;
+        pauseButton.classList.remove('paused');
 
-        if (isWin) {
-            endMessage.textContent = "🎉 Перемога! 🎉";
-            endDetails.innerHTML = `
-                <p>Денис встиг здати завдання за ${Math.floor((GAME_DURATION_SECONDS - timeLeft) / 60)}:${String((GAME_DURATION_SECONDS - timeLeft) % 60).padStart(2, '0')}!</p>
-                <p>Він переміг свій мозок і довів, що може зосередитись навіть в останню мить.</p>
-                <p>Професор був вражений якістю роботи!</p>
-            `;
-            switchVideo('idle.mp4', true);
-        } else {
-            endMessage.textContent = "💀 Дедлайн! 💀";
-            endDetails.innerHTML = `
-                <p>Денис не встиг... Завдання виконано лише на ${progress}%.</p>
-                <p>Його мозок переміг, відволікаючи на котиків, рілзи та бабку з сіллю.</p>
-                <p>Професор розчарований, але Денис обіцяє наступного разу почати раніше.</p>
-                <p>Або ні... 😅</p>
-            `;
-            switchVideo('idle.mp4', true);
+        endScreen.classList.add('hidden');
+        gameShell.classList.remove('hidden');
+
+        switchVideo('idle.mp4', true);
+        updateUI();
+    };
+
+    const startNewRun = () => {
+        resetGameState();
+        if (state.gameLoopInterval) {
+            clearInterval(state.gameLoopInterval);
         }
-    }
+        state.gameLoopInterval = setInterval(gameLoop, 1000);
+        togglePauseVisibility(true);
+    };
 
-    // --- ОБРОБНИКИ ПОДІЙ ---
-
-    // *** ЗМІНА ***: Логіка кнопки "Працювати" повністю переписана
+    // --- EVENT LISTENERS ---
     workButton.addEventListener('click', () => {
-        if (isEventActive || isPhoneDistracted) return; // Не можна працювати під час події або в телефоні
+        if (state.isEventActive || state.isPhoneDistracted || state.isPaused) return;
 
-        // 1. Прогрес додається залежно від фокусу
         let progressGain = PROGRESS_PER_CLICK;
-        if (focus < 30) {
-            progressGain = Math.floor(PROGRESS_PER_CLICK * 0.3); // Дуже мало прогресу при низькому фокусі
-        } else if (focus < 60) {
-            progressGain = Math.floor(PROGRESS_PER_CLICK * 0.6); // Середній прогрес
+        if (state.focus < 30) {
+            progressGain = Math.max(1, Math.round(PROGRESS_PER_CLICK * 0.35));
+        } else if (state.focus < 60) {
+            progressGain = Math.max(1, Math.round(PROGRESS_PER_CLICK * 0.65));
         }
-        
-        progress += progressGain;
-        if (progress > 100) progress = 100;
-        
-        // 2. Втрачаємо фокус при роботі (але менше, ніж при бездіяльності)
-        focus -= 0.2;
-        if (focus < 0) focus = 0;
-        
+
+        state.progress = clamp(state.progress + progressGain, 0, 100);
+        state.focus = clamp(state.focus - FOCUS_CLICK_PENALTY, 0, 100);
         updateUI();
 
-        // 3. Перевірка на перемогу
-        if (progress >= 100) {
+        if (state.progress >= 100) {
             endGame(true);
             return;
         }
 
-        // 4. Запускаємо анімацію ТІЛЬКИ якщо вона ще не запущена
-        if (!isWorking) {
-            isWorking = true;
+        if (!state.isWorking) {
+            state.isWorking = true;
             switchVideo('working.mp4');
-
-            // 5. Коли відео роботи закінчилось, повертаємось до стану спокою
             videoPlayer.onended = () => {
                 switchVideo('idle.mp4', true);
-                isWorking = false;
-                // Очищуємо обробник, щоб він не спрацював для інших відео
+                state.isWorking = false;
                 videoPlayer.onended = null;
             };
         }
     });
 
-    // Початок гри
     startButton.addEventListener('click', () => {
         startScreen.classList.add('hidden');
-        gameHud.classList.remove('hidden');
-
-        videoPlayer.muted = false;
-
-        gameLoopInterval = setInterval(gameLoop, 1000);
-        updateUI();
+        gameShell.classList.remove('hidden');
+        startNewRun();
     });
 
-    // Перезапуск гри
     restartButton.addEventListener('click', () => {
-        progress = 0;
-        timeLeft = GAME_DURATION_SECONDS;
-        focus = 100; // Скидаємо фокус
-        isEventActive = false;
-        isWorking = false;
-        isPhoneDistracted = false; // Скидаємо стан телефону
-
-        endScreen.classList.add('hidden');
-        gameHud.classList.remove('hidden');
-
-        workButton.disabled = false;
-        workButton.textContent = "Працювати (натискай!)";
-        workButton.onclick = null; // Очищуємо обробник телефону
-
-        gameLoopInterval = setInterval(gameLoop, 1000);
-        updateUI();
-        switchVideo('idle.mp4', true);
+        startNewRun();
     });
+
+    pauseButton.addEventListener('click', () => {
+        setPause(!state.isPaused);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        const gameRunning = startScreen.classList.contains('hidden') && endScreen.classList.contains('hidden');
+        if (document.hidden && gameRunning) {
+            setPause(true);
+        }
+    });
+
+    videoPlayer?.addEventListener('error', (error) => {
+        // eslint-disable-next-line no-console
+        console.error('Помилка завантаження відео:', error);
+    });
+
+    // Ініціалізуємо UI при завантаженні
+    updateUI();
 });
