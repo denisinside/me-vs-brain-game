@@ -17,6 +17,7 @@ import { updateUI } from '../ui/uiManager.js';
 import { triggerRandomEvent } from './events.js';
 import { triggerPhoneDistraction } from './phoneDistraction.js';
 import { endGame } from './endGame.js';
+import { shouldTriggerChallenge, triggerRandomChallenge } from './miniChallenges.js';
 
 /**
  * Main game loop - runs every second
@@ -49,6 +50,12 @@ export const gameLoop = () => {
     // Check lose condition
     if (state.timeLeft <= 0) {
         endGame(false);
+        return;
+    }
+
+    // Check for mini-challenge trigger
+    if (shouldTriggerChallenge()) {
+        triggerRandomChallenge();
         return;
     }
 

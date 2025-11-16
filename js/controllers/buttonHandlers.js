@@ -16,12 +16,18 @@ import { updateUI, toggleStartScreen, toggleGameShell, getElement } from '../ui/
 import { endGame } from '../game/endGame.js';
 import { startGameLoop } from '../game/gameLoop.js';
 import { togglePause } from './pauseManager.js';
-
+import { onChallengeClick, resetChallengeTracker } from '../game/miniChallenges.js';
 
 export const handleWorkClick = () => {
     const state = getState();
 
-    if (state.isEventActive || state.isPhoneDistracted || state.isPaused) {
+    // Check if this is a challenge click
+    if (state.isEventActive) {
+        onChallengeClick();
+        return;
+    }
+
+    if (state.isPhoneDistracted || state.isPaused) {
         return;
     }
 
@@ -72,6 +78,7 @@ export const handlePauseClick = () => {
 
 const startNewRun = () => {
     resetState();
+    resetChallengeTracker();
 
     const workButton = getElement('workButton');
     const pauseButton = getElement('pauseButton');

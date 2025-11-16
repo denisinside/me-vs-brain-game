@@ -1,3 +1,8 @@
+/**
+ * Main entry point for the game
+ * This file initializes all managers and sets up event listeners
+ */
+
 import { DOM_IDS } from './config/constants.js';
 import { initVideoManager, getVideoPlayer } from './utils/videoManager.js';
 import { initUIManager, updateUI } from './ui/uiManager.js';
@@ -8,6 +13,7 @@ import {
     handlePauseClick
 } from './controllers/buttonHandlers.js';
 import { setupAutoPause } from './controllers/pauseManager.js';
+import { onKeyInput } from './game/miniChallenges.js';
 
 /**
  * Initialize the game when DOM is ready
@@ -22,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set up event listeners
     setupEventListeners(elements);
+
+    // Set up keyboard listeners for challenges
+    setupKeyboardListeners();
 
     // Set up auto-pause on tab change
     setupAutoPause();
@@ -107,6 +116,15 @@ function setupEventListeners(elements) {
     if (elements.pauseButton) {
         elements.pauseButton.addEventListener('click', handlePauseClick);
     }
+}
+
+/**
+ * Set up keyboard listeners for mini-challenges
+ */
+function setupKeyboardListeners() {
+    document.addEventListener('keydown', (event) => {
+        onKeyInput(event.key);
+    });
 }
 
 /**

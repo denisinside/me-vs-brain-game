@@ -2,7 +2,6 @@ import { getState, setPaused } from '../state/gameState.js';
 import { pauseVideo, playVideo } from '../utils/videoManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
 
-
 export const setPause = (value) => {
     setPaused(value);
 
