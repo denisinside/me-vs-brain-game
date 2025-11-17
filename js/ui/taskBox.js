@@ -1,4 +1,4 @@
-import { getState } from '../state/gameState.js';
+import { getState, getActiveEffectsDescription } from '../state/gameState.js';
 import { formatTime } from '../utils/helpers.js';
 
 
@@ -17,8 +17,18 @@ export const updateTaskBox = (elements) => {
         return;
     }
 
+    if (state.isEventActive) {
+        showEventInProgress(taskBox);
+        return;
+    }
+
     if (state.isPhoneDistracted) {
         showPhoneDistraction(taskBox, state);
+        return;
+    }
+
+    if (state.workDisabled) {
+        showWorkDisabled(taskBox);
         return;
     }
 
@@ -40,8 +50,18 @@ const showPauseMessage = (taskBox) => {
     taskBox.classList.add('warning');
 };
 
+const showEventInProgress = (taskBox) => {
+    taskBox.textContent = 'Подія в процесі... Зроби свій вибір!';
+    taskBox.classList.add('event');
+};
+
 const showPhoneDistraction = (taskBox, state) => {
     taskBox.textContent = `ВИЙДИ З ТЕЛЕФОНА! Залишилось кліків: ${state.phoneClicksRemaining}`;
+    taskBox.classList.add('danger');
+};
+
+const showWorkDisabled = (taskBox) => {
+    taskBox.textContent = 'Не можу зосередитися... Треба заспокоїтися.';
     taskBox.classList.add('danger');
 };
 
@@ -55,12 +75,33 @@ const showCompletionMessage = (taskBox) => {
 };
 
 const showProgressMessage = (taskBox, state) => {
-    const timeHint = state.timeLeft <= 45 ? 'Поспішай!' : 'Продовжуй у тому ж темпі!';
-    const focusHint = state.focus < 40 ? 'Фокус падає, зроби глибокий вдих.' : 'Фокус тримається.';
+    // Check if there are active effects to show
+    const effectsDesc = getActiveEffectsDescription();
+    
+    if (effectsDesc) {
+        // Show effects description
+        taskBox.textContent = `Результат події: ${effectsDesc}`;
+        taskBox.classList.add('event');
+    } else {
+        // Show normal progress hint
+        let hint = '';
+        
+        if (state.timeLeft <= 45) {
+            hint = '⏱️ Поспішай, час майже закінчився!';
+        } else if (state.focus < 40) {
+            hint = '😵 Фокус падає! Зроби глибокий вдих.';
+        } else if (state.progressRateModifier > 1) {
+            hint = '⚡ Працюєш швидше! Використай це!';
+        } else if (state.progressRateModifier < 1) {
+            hint = '🐌 Працюєш повільніше... Тримайся!';
+        } else {
+            hint = '💪 Продовжуй у тому ж темпі!';
+        }
 
-    taskBox.textContent = `Прогрес: ${state.progress}% • Фокус: ${Math.round(state.focus)}% • Час: ${formatTime(state.timeLeft)} • ${timeHint} ${focusHint}`;
+        taskBox.textContent = hint;
 
-    if (state.timeLeft <= 45 || state.focus <= 35) {
-        taskBox.classList.add(state.timeLeft <= 25 ? 'danger' : 'warning');
+        if (state.timeLeft <= 45 || state.focus <= 35) {
+            taskBox.classList.add(state.timeLeft <= 25 ? 'danger' : 'warning');
+        }
     }
 };

@@ -29,8 +29,15 @@
         </div>
     </div>
 
-    <div id="event-popup" class="event-popup hidden">
-        <p id="event-text"></p>
+    <div id="qte-container" class="qte-container hidden">
+        <div class="qte-content">
+            <h3>Швидко натискай клавішу!</h3>
+            <div class="qte-key" id="qte-key">Q</div>
+            <div class="qte-counter">
+                <span>Залишилось:</span>
+                <span id="qte-counter">15</span>
+            </div>
+        </div>
     </div>
 
     <button id="pause-button" class="pause-button" title="Пауза">
@@ -40,20 +47,37 @@
     <div id="game-shell" class="game-shell hidden">
         <div class="game-container">
             <aside class="sidebar">
-                <h3>Думки в голові</h3>
-                <div class="thought-bubble" id="thought-1">
-                    <p>Може, забити на це і піти спати?</p>
+                <h3 id="sidebar-title">Думки в голові</h3>
+                
+                <!-- Event popup - shows in sidebar instead of thoughts -->
+                <div id="event-popup" class="event-popup hidden">
+                    <div class="event-content">
+                        <h2 id="event-title"></h2>
+                        <p id="event-description"></p>
+                    </div>
                 </div>
-                <div class="thought-bubble" id="thought-2">
-                    <p>Ще є час, подивлюся поки що меми.</p>
+
+                <!-- Thoughts - hidden when event is active -->
+                <div id="thoughts-container">
+                    <div class="thought-bubble" id="thought-1">
+                        <p>Може, забити на це і піти спати?</p>
+                    </div>
+                    <div class="thought-bubble" id="thought-2">
+                        <p>Ще є час, подивлюся поки що меми.</p>
+                    </div>
+                    <div class="thought-bubble" id="thought-3">
+                        <p>АААА! Я нічого не встигаю!</p>
+                    </div>
+                    <div class="thought-bubble" id="thought-4">
+                        <p>У мене чемоданне настроєніє! Не хочу вчитись!</p>
+                    </div>
                 </div>
-                <div class="thought-bubble" id="thought-3">
-                    <p>АААА! Я нічого не встигаю!</p>
-                </div>
-                <div class="thought-bubble" id="thought-4">
-                    <p>У мене чемоданне настроєніє! Не хочу вчитись!</p>
-                </div>
-                <div class="avatar-card">
+
+                <!-- Choice buttons - shows in sidebar instead of avatar -->
+                <div id="choice-container" class="choice-container hidden"></div>
+
+                <!-- Avatar - hidden when choices are shown -->
+                <div class="avatar-card" id="avatar-card">
                     <img src="assets/images/student-avatar.gif" alt="Студент Денис">
                 </div>
             </aside>
@@ -108,7 +132,7 @@
 
                 <section class="media-panel">
                     <div class="video-frame">
-                        <video id="game-video" src="assets/videos/idle.mp4" autoplay muted loop playsinline></video>
+                        <video id="game-video" src="assets/videos/idle.mp4" loop playsinline></video>
                     </div>
                 </section>
 

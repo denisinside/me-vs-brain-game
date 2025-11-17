@@ -8,17 +8,24 @@ import {
     handlePauseClick
 } from './controllers/buttonHandlers.js';
 import { setupAutoPause } from './controllers/pauseManager.js';
+import { loadEvents } from './game/eventLoader.js';
 
 /**
  * Initialize the game when DOM is ready
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Get all DOM elements
     const elements = gatherDOMElements();
 
     // Initialize managers
     initVideoManager(elements.videoPlayer);
     initUIManager(elements);
+
+    // Load events from JSON
+    const eventsLoaded = await loadEvents();
+    if (!eventsLoaded) {
+        console.error('Failed to load events');
+    }
 
     // Set up event listeners
     setupEventListeners(elements);
@@ -56,7 +63,15 @@ function gatherDOMElements() {
 
     const taskBox = document.getElementById(DOM_IDS.TASK_BOX);
     const eventPopup = document.getElementById(DOM_IDS.EVENT_POPUP);
-    const eventText = document.getElementById(DOM_IDS.EVENT_TEXT);
+    const eventTitle = document.getElementById(DOM_IDS.EVENT_TITLE);
+    const eventDescription = document.getElementById(DOM_IDS.EVENT_DESCRIPTION);
+    const sidebarTitle = document.getElementById(DOM_IDS.SIDEBAR_TITLE);
+    const choiceContainer = document.getElementById(DOM_IDS.CHOICE_CONTAINER);
+    const thoughtsContainer = document.getElementById(DOM_IDS.THOUGHTS_CONTAINER);
+    const avatarCard = document.getElementById(DOM_IDS.AVATAR_CARD);
+    const qteContainer = document.getElementById(DOM_IDS.QTE_CONTAINER);
+    const qteKey = document.getElementById(DOM_IDS.QTE_KEY);
+    const qteCounter = document.getElementById(DOM_IDS.QTE_COUNTER);
     const endMessage = document.getElementById(DOM_IDS.END_MESSAGE);
     const endDetails = document.getElementById(DOM_IDS.END_DETAILS);
 
@@ -81,7 +96,15 @@ function gatherDOMElements() {
         focusBarFill,
         taskBox,
         eventPopup,
-        eventText,
+        eventTitle,
+        eventDescription,
+        sidebarTitle,
+        choiceContainer,
+        thoughtsContainer,
+        avatarCard,
+        qteContainer,
+        qteKey,
+        qteCounter,
         endMessage,
         endDetails,
         thoughtElements,
@@ -107,6 +130,22 @@ function setupEventListeners(elements) {
     if (elements.pauseButton) {
         elements.pauseButton.addEventListener('click', handlePauseClick);
     }
+
+    // ESC key to pause/unpause
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const gameShell = elements.gameShell;
+            const startScreen = elements.startScreen;
+            const endScreen = elements.endScreen;
+            
+            // Only toggle pause if game is running (not on start or end screen)
+            if (gameShell && !gameShell.classList.contains('hidden') &&
+                startScreen && startScreen.classList.contains('hidden') &&
+                endScreen && endScreen.classList.contains('hidden')) {
+                handlePauseClick();
+            }
+        }
+    });
 }
 
 /**

@@ -38,7 +38,7 @@ const updateProgressDisplay = (elements, state) => {
     const progressBarFill = elements.progressBarFill;
 
     if (progressDisplay) {
-        progressDisplay.textContent = `${state.progress}%`;
+        progressDisplay.textContent = `${state.progress.toFixed(2)}%`;
     }
 
     if (progressBarFill) {

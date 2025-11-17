@@ -1,12 +1,9 @@
-import { getState, setEventActive, setEventMessage, decrementTimeLeft, adjustFocus } from '../state/gameState.js';
-import { RANDOM_EVENTS } from '../config/constants.js';
-import { randomElement } from '../utils/helpers.js';
-import { switchVideo, playVideo } from '../utils/videoManager.js';
-import { VIDEOS } from '../config/constants.js';
-import { updateUI, getElement } from '../ui/uiManager.js';
+import { getState } from '../state/gameState.js';
+import { getRandomEvent, getAvailableEventsCount } from './eventLoader.js';
+import { startEvent } from './eventSystem.js';
 
 /**
- * Trigger a random event (cat, phone call, etc.)
+ * Trigger a random event from loaded events.json
  */
 export const triggerRandomEvent = () => {
     const state = getState();
@@ -16,42 +13,20 @@ export const triggerRandomEvent = () => {
         return;
     }
 
-    const eventData = randomElement(RANDOM_EVENTS);
-
-    setEventActive(true);
-    setEventMessage(eventData.text);
-
-    const workButton = getElement('workButton');
-    if (workButton) {
-        workButton.disabled = true;
+    // Check if there are available events
+    if (getAvailableEventsCount() === 0) {
+        console.log('No more events available');
+        return;
     }
 
-    // Apply penalties
-    decrementTimeLeft(eventData.penalty);
-    adjustFocus(-eventData.focusLoss);
-
-    // Switch to distraction video
-    switchVideo(eventData.video);
-
-    updateUI();
-
-    // End event after duration
-    setTimeout(() => {
-        endEvent();
-    }, eventData.duration);
-};
-
-const endEvent = () => {
-    const state = getState();
-
-    switchVideo(VIDEOS.IDLE, true);
-    setEventActive(false);
-    setEventMessage(null);
-
-    const workButton = getElement('workButton');
-    if (workButton) {
-        workButton.disabled = state.progress >= 100 || state.isPaused || state.isPhoneDistracted;
+    // Get random event from loaded events
+    const eventData = getRandomEvent();
+    
+    if (!eventData) {
+        console.warn('Could not get random event');
+        return;
     }
 
-    updateUI();
+    // Start the event
+    startEvent(eventData);
 };

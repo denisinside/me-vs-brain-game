@@ -5,6 +5,7 @@ import {
     setWorking,
     resetState
 } from '../state/gameState.js';
+import { resetAvailableEvents } from '../game/eventLoader.js';
 import {
     PROGRESS_PER_CLICK,
     FOCUS_CLICK_PENALTY,
@@ -21,16 +22,18 @@ import { togglePause } from './pauseManager.js';
 export const handleWorkClick = () => {
     const state = getState();
 
-    if (state.isEventActive || state.isPhoneDistracted || state.isPaused) {
+    if (state.isEventActive || state.isPhoneDistracted || state.isPaused || state.workDisabled) {
         return;
     }
 
     // Calculate progress gain based on focus
     let progressGain = PROGRESS_PER_CLICK;
-    if (state.focus < 30) {
-        progressGain = Math.max(1, Math.round(PROGRESS_PER_CLICK * 0.35));
-    } else if (state.focus < 60) {
-        progressGain = Math.max(1, Math.round(PROGRESS_PER_CLICK * 0.65));
+    if (state.focus < 25) {
+        progressGain = PROGRESS_PER_CLICK * 0.25;
+    } else if (state.focus < 40) {
+        progressGain =  PROGRESS_PER_CLICK * 0.5;
+    } else if (state.focus < 70) {
+        progressGain =  PROGRESS_PER_CLICK * 0.75;
     }
 
     incrementProgress(progressGain);
@@ -43,17 +46,15 @@ export const handleWorkClick = () => {
         return;
     }
 
-    // Play working animation
-    if (!state.isWorking) {
-        setWorking(true);
-        switchVideo(VIDEOS.WORKING);
+    // Play working animation (always switch to working video on click)
+    setWorking(true);
+    switchVideo(VIDEOS.WORKING, false);
 
-        onVideoEnd(() => {
-            switchVideo(VIDEOS.IDLE, true);
-            setWorking(false);
-            onVideoEnd(null);
-        });
-    }
+    onVideoEnd(() => {
+        switchVideo(VIDEOS.IDLE, true);
+        setWorking(false);
+        onVideoEnd(null);
+    });
 };
 
 export const handleStartClick = () => {
@@ -72,6 +73,7 @@ export const handlePauseClick = () => {
 
 const startNewRun = () => {
     resetState();
+    resetAvailableEvents(); // Reset event pool for new game
 
     const workButton = getElement('workButton');
     const pauseButton = getElement('pauseButton');
@@ -100,6 +102,13 @@ const startNewRun = () => {
     }
 
     switchVideo(VIDEOS.IDLE, true);
+    
+    // Start video playback
+    const videoPlayer = getElement('videoPlayer');
+    if (videoPlayer) {
+        videoPlayer.play().catch(() => {});
+    }
+    
     updateUI();
     startGameLoop();
 };

@@ -24,8 +24,24 @@ export const setPause = (value) => {
         if (pauseButton) {
             pauseButton.classList.remove('paused');
         }
-        if (workButton && !state.isEventActive && !state.isPhoneDistracted && state.progress < 100) {
-            workButton.disabled = false;
+        if (workButton) {
+            // During phone distraction, button should be enabled (for escape clicks)
+            // unless work is disabled by effect
+            if (state.isPhoneDistracted) {
+                workButton.disabled = state.workDisabled;
+            }
+            // During regular events, button should be disabled
+            else if (state.isEventActive) {
+                workButton.disabled = true;
+            }
+            // Normal state: enable if game not finished and work not disabled
+            else if (state.progress < 100) {
+                workButton.disabled = state.workDisabled;
+            }
+            // Game finished
+            else {
+                workButton.disabled = true;
+            }
         }
         playVideo();
     }

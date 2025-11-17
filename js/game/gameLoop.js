@@ -33,14 +33,14 @@ export const gameLoop = () => {
     decrementTimeLeft(1);
 
     // Update focus based on phone distraction
-    if (!state.isPhoneDistracted) {
+    if (!state.isPhoneDistracted && !state.isEventActive) {
         adjustFocus(-FOCUS_DECAY_RATE);
 
-        // Check if should trigger phone distraction
+        // Check if should trigger phone distraction (only if no event is active)
         if (state.focus <= PHONE_DISTRACTION_THRESHOLD && shouldTrigger(PHONE_TRIGGER_CHANCE)) {
             triggerPhoneDistraction();
         }
-    } else {
+    } else if (state.isPhoneDistracted) {
         adjustFocus(FOCUS_RECOVERY_RATE);
     }
 
@@ -52,8 +52,8 @@ export const gameLoop = () => {
         return;
     }
 
-    // Random events
-    if (!state.isPhoneDistracted && shouldTrigger(EVENT_CHANCE_PER_SECOND)) {
+    // Random events (only if no event is active and not phone distracted)
+    if (!state.isPhoneDistracted && !state.isEventActive && shouldTrigger(EVENT_CHANCE_PER_SECOND)) {
         triggerRandomEvent();
     }
 };

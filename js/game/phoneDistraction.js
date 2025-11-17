@@ -22,6 +22,7 @@ export const triggerPhoneDistraction = () => {
     if (workButton) {
         workButton.textContent = 'Тікай з телефона!';
         workButton.onclick = handlePhoneEscape;
+        workButton.disabled = false; // Enable button for escape clicks
     }
 
     switchVideo(VIDEOS.DISTRACTION);
@@ -58,7 +59,8 @@ const endPhoneDistraction = () => {
 
     const workButton = getElement('workButton');
     if (workButton) {
-        workButton.disabled = state.progress >= 100 || state.isPaused;
+        // Enable button if no blocking conditions are active
+        workButton.disabled = state.progress >= 100 || state.isPaused || state.isEventActive || state.isPhoneDistracted || state.workDisabled;
         workButton.textContent = 'Працювати (натискай!)';
         workButton.onclick = null;
     }

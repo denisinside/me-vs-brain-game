@@ -12,6 +12,14 @@ const state = {
     isPaused: false,
     phoneClicksRemaining: 0,
     eventMessage: null,
+    // New event system fields
+    currentEvent: null,
+    eventEpilogues: [], // Store completed event epilogues
+    progressRateModifier: 1.0, // Multiplier for progress rate
+    progressRateTimeout: null, // Timeout for temporary progress rate changes
+    workDisabled: false, // Whether work button is disabled
+    workDisableTimeout: null, // Timeout for temporary work disable
+    activeEffectsDescription: null, // Description of currently active effects
 };
 
 // Getters
@@ -26,6 +34,11 @@ export const isPaused = () => state.isPaused;
 export const getPhoneClicksRemaining = () => state.phoneClicksRemaining;
 export const getEventMessage = () => state.eventMessage;
 export const getGameLoopInterval = () => state.gameLoopInterval;
+export const getCurrentEvent = () => state.currentEvent;
+export const getEventEpilogues = () => state.eventEpilogues;
+export const getProgressRateModifier = () => state.progressRateModifier;
+export const isWorkDisabled = () => state.workDisabled;
+export const getActiveEffectsDescription = () => state.activeEffectsDescription;
 
 // Setters
 export const setProgress = (value) => { state.progress = value; };
@@ -38,10 +51,17 @@ export const setPaused = (value) => { state.isPaused = value; };
 export const setPhoneClicksRemaining = (value) => { state.phoneClicksRemaining = value; };
 export const setEventMessage = (value) => { state.eventMessage = value; };
 export const setGameLoopInterval = (value) => { state.gameLoopInterval = value; };
+export const setCurrentEvent = (value) => { state.currentEvent = value; };
+export const setProgressRateModifier = (value) => { state.progressRateModifier = value; };
+export const setWorkDisabled = (value) => { state.workDisabled = value; };
+export const setActiveEffectsDescription = (value) => { state.activeEffectsDescription = value; };
 
 // Complex state operations
 export const incrementProgress = (amount) => {
-    state.progress = Math.min(100, state.progress + amount);
+    // Apply progress rate modifier
+    const modifiedAmount = amount * state.progressRateModifier;
+    // Round to avoid floating point precision issues
+    state.progress = Math.min(100, Number((state.progress + modifiedAmount).toFixed(2)));
 };
 
 export const decrementTimeLeft = (amount) => {
@@ -56,6 +76,68 @@ export const decrementPhoneClicks = () => {
     state.phoneClicksRemaining = Math.max(0, state.phoneClicksRemaining - 1);
 };
 
+// Event epilogue management
+export const addEventEpilogue = (eventTitle, epilogueText) => {
+    state.eventEpilogues.push({
+        title: eventTitle,
+        text: epilogueText
+    });
+};
+
+export const clearEventEpilogues = () => {
+    state.eventEpilogues = [];
+};
+
+// Progress rate modifier management
+export const applyProgressRateModifier = (modifier, duration) => {
+    // Clear existing timeout
+    if (state.progressRateTimeout) {
+        clearTimeout(state.progressRateTimeout);
+    }
+    
+    state.progressRateModifier = modifier;
+    
+    if (duration > 0) {
+        state.progressRateTimeout = setTimeout(() => {
+            state.progressRateModifier = 1.0;
+            state.progressRateTimeout = null;
+        }, duration);
+    }
+};
+
+export const resetProgressRateModifier = () => {
+    if (state.progressRateTimeout) {
+        clearTimeout(state.progressRateTimeout);
+        state.progressRateTimeout = null;
+    }
+    state.progressRateModifier = 1.0;
+};
+
+// Work disable management
+export const applyWorkDisable = (duration) => {
+    // Clear existing timeout
+    if (state.workDisableTimeout) {
+        clearTimeout(state.workDisableTimeout);
+    }
+    
+    state.workDisabled = true;
+    
+    if (duration > 0) {
+        state.workDisableTimeout = setTimeout(() => {
+            state.workDisabled = false;
+            state.workDisableTimeout = null;
+        }, duration);
+    }
+};
+
+export const resetWorkDisable = () => {
+    if (state.workDisableTimeout) {
+        clearTimeout(state.workDisableTimeout);
+        state.workDisableTimeout = null;
+    }
+    state.workDisabled = false;
+};
+
 // Reset state
 export const resetState = () => {
     state.progress = 0;
@@ -67,9 +149,16 @@ export const resetState = () => {
     state.isPaused = false;
     state.phoneClicksRemaining = 0;
     state.eventMessage = null;
+    state.currentEvent = null;
+    state.eventEpilogues = [];
+    state.activeEffectsDescription = null;
 
     if (state.gameLoopInterval) {
         clearInterval(state.gameLoopInterval);
         state.gameLoopInterval = null;
     }
+
+    // Clear timeouts
+    resetProgressRateModifier();
+    resetWorkDisable();
 };
