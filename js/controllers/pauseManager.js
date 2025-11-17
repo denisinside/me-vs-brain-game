@@ -13,6 +13,13 @@ export const setPause = (value) => {
     if (value) {
         // Pausing
         pauseVideo();
+        
+        // Pause phone TikTok video if visible
+        const phoneVideo = document.getElementById('phone-tiktok-video');
+        if (phoneVideo && !phoneVideo.paused) {
+            phoneVideo.pause();
+        }
+        
         if (pauseButton) {
             pauseButton.classList.add('paused');
         }
@@ -23,6 +30,15 @@ export const setPause = (value) => {
         // Resuming
         if (pauseButton) {
             pauseButton.classList.remove('paused');
+        }
+        
+        // Resume phone TikTok video if visible and phone distraction is active
+        if (state.isPhoneDistracted) {
+            const phoneVideo = document.getElementById('phone-tiktok-video');
+            const phoneMockup = document.getElementById('phone-mockup');
+            if (phoneVideo && phoneMockup && !phoneMockup.classList.contains('hidden')) {
+                phoneVideo.play().catch(() => {});
+            }
         }
         if (workButton) {
             // During phone distraction, button should be enabled (for escape clicks)
