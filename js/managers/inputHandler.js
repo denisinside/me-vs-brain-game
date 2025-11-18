@@ -1,5 +1,15 @@
 const IGNORE_KEYS = ['Shift', 'Alt', 'Control', 'Meta', 'Escape'];
 
+const getMatchingPrefixLength = (value, target) => {
+    const max = Math.min(value.length, target.length);
+    for (let i = 0; i < max; i += 1) {
+        if (value[i] !== target[i]) {
+            return i;
+        }
+    }
+    return max;
+};
+
 export class InputHandler {
     constructor({ elements, timerManager }) {
         this.elements = elements;
@@ -34,6 +44,8 @@ export class InputHandler {
             hits: 0,
             index: 0,
             mistakes: 0,
+            typedValue: '',
+            rawInputValue: '',
         };
 
         this.renderChallenge();
@@ -117,27 +129,51 @@ export class InputHandler {
     }
 
     handleTypingInput(value) {
-        if (!this.activeChallenge) return;
-        const target = this.activeChallenge.phrase || '';
-        const normalizedValue = value;
-        const normalizedTarget = target.substring(0, normalizedValue.length);
+        if (!this.activeChallenge || this.activeChallenge.type !== 'typing_challenge') return;
 
-        if (normalizedValue !== normalizedTarget) {
-            this.activeChallenge.mistakes += 1;
-            if (this.activeChallenge.penaltyPerMistake && this.timerManager) {
-                this.timerManager.applyTimePenalty(this.activeChallenge.penaltyPerMistake);
-            }
-            this.elements.challengeInput.value = normalizedTarget;
-            this.highlightTypingProgress(normalizedTarget.length);
-            return;
+        const target = this.activeChallenge.phrase || '';
+        const trimmedValue = value.slice(0, target.length);
+        if (trimmedValue !== value && this.elements.challengeInput) {
+            this.elements.challengeInput.value = trimmedValue;
         }
 
-        const ratio = Math.min(1, normalizedValue.length / target.length);
-        this.updateProgress(ratio);
-        this.highlightTypingProgress(normalizedValue.length);
+        const previousRawValue = this.activeChallenge.rawInputValue || '';
+        this.activeChallenge.rawInputValue = trimmedValue;
 
-        if (normalizedValue.length >= target.length) {
+        const matchLength = getMatchingPrefixLength(trimmedValue, target);
+
+        if (trimmedValue.length > previousRawValue.length) {
+            for (let i = previousRawValue.length; i < trimmedValue.length; i += 1) {
+                if (trimmedValue[i] !== target[i]) {
+                    this.handleTypingMistake();
+                    break;
+                }
+            }
+        } else if (trimmedValue.length === previousRawValue.length && trimmedValue.length) {
+            for (let i = 0; i < trimmedValue.length; i += 1) {
+                if (trimmedValue[i] !== previousRawValue[i] && trimmedValue[i] !== target[i]) {
+                    this.handleTypingMistake();
+                    break;
+                }
+            }
+        }
+
+        this.activeChallenge.typedValue = trimmedValue.substring(0, matchLength);
+
+        const ratio = target.length ? Math.min(1, matchLength / target.length) : 1;
+        this.updateProgress(ratio);
+        this.highlightTypingProgress(matchLength);
+
+        if (matchLength >= target.length) {
             this.finish(true, 'typed');
+        }
+    }
+
+    handleTypingMistake() {
+        if (!this.activeChallenge) return;
+        this.activeChallenge.mistakes += 1;
+        if (this.activeChallenge.penaltyPerMistake && this.timerManager) {
+            this.timerManager.applyTimePenalty(this.activeChallenge.penaltyPerMistake);
         }
     }
 

@@ -27,6 +27,7 @@ export class EventManager {
         this.cooldownMs = 15000;
         this.pendingOutcome = null;
         this.effectsTimeout = null;
+        this.challengePenaltyTimeout = null;
         this.analytics = null;
         this.onProgressCompletion = null;
         this.assetCache = new Map();
@@ -219,6 +220,10 @@ export class EventManager {
     resolveChallengeResult(result, challengeId) {
         setEventActive(false);
         setEventMessage(null);
+        if (this.challengePenaltyTimeout) {
+            clearTimeout(this.challengePenaltyTimeout);
+            this.challengePenaltyTimeout = null;
+        }
         const workButton = getElement('workButton');
         if (workButton) {
             const state = getState();
@@ -237,6 +242,19 @@ export class EventManager {
             this.timerManager.applyTimePenalty(result.timePenalty);
         }
 
+        if (!result?.success) {
+            const punishmentText = this.buildChallengePunishmentText(result);
+            if (punishmentText) {
+                setEventMessage(punishmentText);
+                updateUI();
+                this.challengePenaltyTimeout = setTimeout(() => {
+                    setEventMessage(null);
+                    updateUI();
+                    this.challengePenaltyTimeout = null;
+                }, 2500);
+            }
+        }
+
         updateUI();
         this.logAnalytics('challenge_result', { challengeId, success: result?.success });
         this.markEventCooldown();
@@ -244,6 +262,20 @@ export class EventManager {
         if (getState().progress >= 100 && this.onProgressCompletion) {
             this.onProgressCompletion();
         }
+    }
+
+    buildChallengePunishmentText(result) {
+        const chunks = [];
+        if (result?.timePenalty) {
+            chunks.push(`-${result.timePenalty}с часу`);
+        }
+        if (result?.progressAdjustment) {
+            chunks.push(`-${result.progressAdjustment}% прогресу`);
+        }
+        if (!chunks.length) {
+            return 'Провал міні-випробування! Мозок знову святкує.';
+        }
+        return `Провал міні-випробування: ${chunks.join(' + ')}`;
     }
 
     logAnalytics(event, payload = {}) {
