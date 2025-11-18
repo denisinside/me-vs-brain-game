@@ -1,5 +1,5 @@
 import { DOM_IDS } from './config/constants.js';
-import { initVideoManager, getVideoPlayer } from './utils/videoManager.js';
+import { initVideoManager } from './utils/videoManager.js';
 import { initUIManager, updateUI } from './ui/uiManager.js';
 import {
     handleWorkClick,
@@ -7,8 +7,15 @@ import {
     handleRestartClick,
     handlePauseClick
 } from './controllers/buttonHandlers.js';
-import { setupAutoPause } from './controllers/pauseManager.js';
-import { loadEvents } from './game/eventLoader.js';
+import { setupAutoPause, bindTimerControl } from './controllers/pauseManager.js';
+import { TimerManager } from './managers/timerManager.js';
+import { ProgressManager } from './managers/progressManager.js';
+import { EventManager } from './managers/eventManager.js';
+import { InputHandler } from './managers/inputHandler.js';
+import { AudioManager } from './managers/audioManager.js';
+import { SaveManager } from './managers/saveManager.js';
+import { Analytics } from './managers/analytics.js';
+import { initGameController } from './core/gameController.js';
 
 /**
  * Initialize the game when DOM is ready
@@ -18,14 +25,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elements = gatherDOMElements();
 
     // Initialize managers
-    initVideoManager(elements.videoPlayer);
+    initVideoManager(elements.videoPlayer, elements.videoFallback);
     initUIManager(elements);
 
-    // Load events from JSON
-    const eventsLoaded = await loadEvents();
-    if (!eventsLoaded) {
-        console.error('Failed to load events');
+    const audioManager = new AudioManager();
+    const timerManager = new TimerManager({});
+    const progressManager = new ProgressManager();
+    const inputHandler = new InputHandler({ elements, timerManager });
+    const eventManager = new EventManager({ timerManager, progressManager, audioManager, inputHandler });
+    const saveManager = new SaveManager();
+    const analytics = new Analytics();
+    bindTimerControl(timerManager);
+
+    try {
+        await eventManager.loadEventsFromJson();
+    } catch (error) {
+        console.error('Failed to load events', error);
     }
+
+    initGameController({
+        timerManager,
+        progressManager,
+        eventManager,
+        inputHandler,
+        audioManager,
+        saveManager,
+        analytics,
+    });
 
     // Set up event listeners
     setupEventListeners(elements);
@@ -72,6 +98,16 @@ function gatherDOMElements() {
     const qteContainer = document.getElementById(DOM_IDS.QTE_CONTAINER);
     const qteKey = document.getElementById(DOM_IDS.QTE_KEY);
     const qteCounter = document.getElementById(DOM_IDS.QTE_COUNTER);
+    const challengeOverlay = document.getElementById(DOM_IDS.CHALLENGE_OVERLAY);
+    const challengeTitle = document.getElementById(DOM_IDS.CHALLENGE_TITLE);
+    const challengeInstructions = document.getElementById(DOM_IDS.CHALLENGE_INSTRUCTIONS);
+    const challengeBody = document.getElementById(DOM_IDS.CHALLENGE_BODY);
+    const challengeSequence = document.getElementById(DOM_IDS.CHALLENGE_SEQUENCE);
+    const challengeInput = document.getElementById(DOM_IDS.CHALLENGE_INPUT);
+    const challengeProgressTrack = document.getElementById(DOM_IDS.CHALLENGE_PROGRESS_TRACK);
+    const challengeProgressFill = document.getElementById(DOM_IDS.CHALLENGE_PROGRESS_FILL);
+    const challengeTimer = document.getElementById(DOM_IDS.CHALLENGE_TIMER);
+    const videoFallback = document.getElementById(DOM_IDS.VIDEO_FALLBACK);
     const endMessage = document.getElementById(DOM_IDS.END_MESSAGE);
     const endDetails = document.getElementById(DOM_IDS.END_DETAILS);
 
@@ -105,6 +141,16 @@ function gatherDOMElements() {
         qteContainer,
         qteKey,
         qteCounter,
+        challengeOverlay,
+        challengeTitle,
+        challengeInstructions,
+        challengeBody,
+        challengeSequence,
+        challengeInput,
+        challengeProgressTrack,
+        challengeProgressFill,
+        challengeTimer,
+        videoFallback,
         endMessage,
         endDetails,
         thoughtElements,

@@ -40,11 +40,11 @@ const showPhoneMockup = () => {
     const randomVideo = randomElement(TIKTOK_VIDEOS);
     const videoPath = `assets/videos/tiktoks/${randomVideo}`;
     
-    // Show mockup first
+    // Show mockup with slide-in animation
     phoneMockup.classList.remove('hidden');
-    phoneMockup.style.display = 'block';
-    phoneMockup.style.visibility = 'visible';
-    phoneMockup.style.opacity = '1';
+    requestAnimationFrame(() => {
+        phoneMockup.classList.add('visible');
+    });
     
     console.log('Showing phone mockup with video:', videoPath);
     
@@ -74,8 +74,10 @@ const hidePhoneMockup = () => {
     const phoneVideo = document.getElementById('phone-tiktok-video');
     
     if (phoneMockup) {
-        phoneMockup.classList.add('hidden');
-        phoneMockup.style.display = 'none';
+        phoneMockup.classList.remove('visible');
+        setTimeout(() => {
+            phoneMockup.classList.add('hidden');
+        }, 300);
     }
     
     if (phoneVideo) {

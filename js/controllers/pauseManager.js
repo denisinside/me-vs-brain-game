@@ -2,9 +2,22 @@ import { getState, setPaused } from '../state/gameState.js';
 import { pauseVideo, playVideo } from '../utils/videoManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
 
+let timerControl = null;
+
+export const bindTimerControl = (control) => {
+    timerControl = control;
+};
 
 export const setPause = (value) => {
     setPaused(value);
+
+    if (timerControl) {
+        if (value) {
+            timerControl.pause();
+        } else {
+            timerControl.resume();
+        }
+    }
 
     const pauseButton = getElement('pauseButton');
     const workButton = getElement('workButton');

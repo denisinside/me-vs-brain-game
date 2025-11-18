@@ -40,6 +40,21 @@
         </div>
     </div>
 
+    <div id="challenge-overlay" class="challenge-overlay hidden">
+        <div class="challenge-card">
+            <h3 id="challenge-title">Міні-випробування</h3>
+            <p id="challenge-instructions">Виконай завдання, щоб утримати прогрес!</p>
+            <div class="challenge-body" id="challenge-body">
+                <div class="challenge-sequence" id="challenge-sequence"></div>
+                <input id="challenge-input" class="challenge-input hidden" type="text" autocomplete="off" spellcheck="false" placeholder="Введи відповідь тут">
+                <div class="challenge-progress" id="challenge-progress-track">
+                    <div class="challenge-progress-fill" id="challenge-progress-fill"></div>
+                </div>
+                <div class="challenge-timer" id="challenge-timer">00:00</div>
+            </div>
+        </div>
+    </div>
+
     <div id="phone-mockup" class="phone-mockup hidden">
         <div class="phone-frame">
             <img src="assets/images/phone.png" alt="Phone" class="phone-image">
@@ -140,6 +155,7 @@
                 <section class="media-panel">
                     <div class="video-frame">
                         <video id="game-video" src="assets/videos/idle.mp4" loop playsinline></video>
+                        <img id="video-fallback" class="video-fallback hidden" src="assets/images/room.jpg" alt="Статична заставка відео">
                     </div>
                 </section>
 

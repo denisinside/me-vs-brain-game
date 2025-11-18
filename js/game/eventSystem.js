@@ -5,14 +5,10 @@
 import { 
     setEventActive, 
     setCurrentEvent,
-    addEventEpilogue,
-    getState,
-    setActiveEffectsDescription
+    getState
 } from '../state/gameState.js';
 import { switchVideo, onVideoEnd } from '../utils/videoManager.js';
-import { applyEffects, getEffectsDescription } from './effectsManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
-import { randomElement } from '../utils/helpers.js';
 
 let currentEventData = null;
 let currentOutcome = null;
@@ -21,6 +17,15 @@ let qteTimeout = null;
 let qteKeyListener = null;
 let currentQteKey = ''; // Key code (e.g., 'KeyQ')
 let currentQteDisplayKey = ''; // Display label (e.g., 'Q')
+let externalHooks = {
+    onChoiceSelected: null,
+    onQteResolved: null,
+    onOutcomeComplete: null,
+};
+
+export const registerEventHooks = (hooks = {}) => {
+    externalHooks = { ...externalHooks, ...hooks };
+};
 
 /**
  * Start an event (choice or QTE)
@@ -132,7 +137,16 @@ const showChoices = (eventData) => {
         const button = document.createElement('button');
         button.className = 'choice-button';
         button.textContent = choice.buttonText;
-        button.onclick = () => selectChoice(choice);
+        button.onclick = () => {
+            if (externalHooks.onChoiceSelected) {
+                const handled = externalHooks.onChoiceSelected(currentEventData, choice, index);
+                if (handled) {
+                    hideChoices();
+                    return;
+                }
+            }
+            selectChoice(choice);
+        };
         choiceContainer.appendChild(button);
     });
 
@@ -267,6 +281,9 @@ const qteSuccess = (eventData) => {
     cleanupQTE();
     hideQTE();
     currentOutcome = eventData.successOutcome;
+    if (externalHooks.onQteResolved && externalHooks.onQteResolved(currentEventData, true, eventData.successOutcome)) {
+        return;
+    }
     playOutcome(eventData.successOutcome);
 };
 
@@ -277,6 +294,9 @@ const qteFailure = (eventData) => {
     cleanupQTE();
     hideQTE();
     currentOutcome = eventData.failureOutcome;
+    if (externalHooks.onQteResolved && externalHooks.onQteResolved(currentEventData, false, eventData.failureOutcome)) {
+        return;
+    }
     playOutcome(eventData.failureOutcome);
 };
 
@@ -307,44 +327,13 @@ const playOutcome = (outcome) => {
 
     // Wait for video to end
     onVideoEnd(() => {
-        // Wait 500ms, then play sound
         setTimeout(() => {
-            if (outcome.sound) {
-                playSound(outcome.sound);
+            if (externalHooks.onOutcomeComplete) {
+                externalHooks.onOutcomeComplete(currentEventData, outcome);
             }
-
-            // Apply effects
-            if (outcome.effects) {
-                applyEffects(outcome.effects);
-                
-                // Save effects description for UI
-                const effectsDesc = getEffectsDescription(outcome.effects);
-                setActiveEffectsDescription(effectsDesc);
-                
-                // Clear effects description after a delay
-                setTimeout(() => {
-                    setActiveEffectsDescription(null);
-                }, 10000); // Show for 10 seconds
-            }
-
-            // Save random epilogue
-            if (outcome.epilogueTexts && outcome.epilogueTexts.length > 0) {
-                const epilogueText = randomElement(outcome.epilogueTexts);
-                addEventEpilogue(currentEventData.title, epilogueText);
-            }
-
-            // End event
             endEvent();
         }, 500);
     });
-};
-
-/**
- * Play sound
- */
-const playSound = (soundFile) => {
-    const audio = new Audio(`assets/audio/events/${soundFile}`);
-    audio.play().catch(err => console.warn('Could not play sound:', err));
 };
 
 /**
@@ -380,5 +369,9 @@ export const cleanupEventSystem = () => {
     hideChoices();
     hideQTE();
     hideEventInfo();
+};
+
+export const playEventOutcome = (outcome) => {
+    playOutcome(outcome);
 };
 

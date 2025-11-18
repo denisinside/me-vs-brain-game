@@ -1,15 +1,10 @@
 import { getState, setEventActive, setPhoneDistracted, setWorking, setPaused, setPhoneClicksRemaining, setEventMessage, getEventEpilogues } from '../state/gameState.js';
-import { GAME_DURATION_SECONDS, VIDEOS } from '../config/constants.js';
+import { GAME_DURATION_SECONDS } from '../config/constants.js';
 import { formatTime } from '../utils/helpers.js';
-import { switchVideo } from '../utils/videoManager.js';
-import { updateUI, toggleEndScreen, togglePauseVisibility, getElement } from '../ui/uiManager.js';
-import { stopGameLoop } from './gameLoop.js';
+import { updateUI, toggleEndScreen, getElement } from '../ui/uiManager.js';
 
 
 export const endGame = (isWin) => {
-    stopGameLoop();
-
-    // Reset event flags
     setEventActive(true);
     setPhoneDistracted(false);
     setWorking(false);
@@ -17,18 +12,13 @@ export const endGame = (isWin) => {
     setPhoneClicksRemaining(0);
     setEventMessage(null);
 
-    // Disable work button
     const workButton = getElement('workButton');
     if (workButton) {
         workButton.disabled = true;
         workButton.onclick = null;
     }
 
-    togglePauseVisibility(false);
-    switchVideo(VIDEOS.IDLE, true);
     updateUI();
-
-    // Display end screen
     displayEndScreen(isWin);
     toggleEndScreen(true);
 };
