@@ -2,8 +2,8 @@
 export const GAME_DURATION_SECONDS = 180; // 3 minutes
 
 // Progress and gameplay
-export const PROGRESS_PER_CLICK = 0.2;
-export const EVENT_CHANCE_PER_SECOND = 0.15;
+export const PROGRESS_PER_CLICK = 0.4;
+export const EVENT_CHANCE_PER_SECOND = 0.1;
 
 // Focus mechanics
 export const FOCUS_DECAY_RATE = 1;
@@ -12,7 +12,7 @@ export const FOCUS_CLICK_PENALTY = 1;
 
 // Phone distraction
 export const PHONE_DISTRACTION_THRESHOLD = 45;
-export const PHONE_ESCAPE_CLICKS = 15;
+export const PHONE_ESCAPE_CLICKS = 20;
 export const PHONE_TRIGGER_CHANCE = 0.15;
 
 // Video files

@@ -47,13 +47,13 @@ export const getRandomEvent = () => {
         return null;
     }
 
-    // TODO: TESTING - Always return first event (event_neighbor_grandma)
-    // Remove this block when testing is done
-    const firstEvent = availableEvents.find(e => e.id === 'event_laptop_battery');
-    if (firstEvent) {
-        // Don't mark as used for testing - allow repeating
-        return firstEvent;
-    }
+    // // TODO: TESTING - Always return first event (event_neighbor_grandma)
+    // // Remove this block when testing is done
+    // const firstEvent = availableEvents.find(e => e.id === 'event_laptop_battery');
+    // if (firstEvent) {
+    //     // Don't mark as used for testing - allow repeating
+    //     return firstEvent;
+    // }
 
     // Calculate total weight
     const totalWeight = availableEvents.reduce((sum, event) => sum + (event.weight || 1), 0);
