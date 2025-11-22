@@ -172,7 +172,7 @@ export class EventManager {
         }
 
         if (outcome.sound && this.audioManager) {
-            this.audioManager.playSFX(outcome.sound);
+            this.audioManager.playVoice(outcome.sound);
         }
 
         if (outcome.epilogueTexts?.length) {

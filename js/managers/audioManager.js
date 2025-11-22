@@ -8,8 +8,8 @@ export class AudioManager {
         this.backgroundAudio = null;
         this.groupVolume = {
             background: 0.5,
-            sfx: 0.9,
-            voice: 0.9,
+            sfx: 1.0,
+            voice: 1.0,
         };
         this.muted = false;
         this.activeOneShots = new Set();
