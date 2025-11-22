@@ -2,21 +2,21 @@
 export const GAME_DURATION_SECONDS = 180; // 3 minutes
 
 // Progress and gameplay
-export const PROGRESS_PER_CLICK = 0.35;
+export const PROGRESS_PER_CLICK = 0.425;
 
 // Focus mechanics
 export const FOCUS_DECAY_RATE = 1;
-export const FOCUS_RECOVERY_RATE = 5;
+export const FOCUS_RECOVERY_RATE = 7;
 export const FOCUS_CLICK_PENALTY = 1;
 
 // Phone distraction
-export const PHONE_DISTRACTION_THRESHOLD = 45;
+export const PHONE_DISTRACTION_THRESHOLD = 40;
 export const PHONE_ESCAPE_CLICKS = 20;
-export const PHONE_TRIGGER_CHANCE = 0.1;
+export const PHONE_TRIGGER_CHANCE = 0.11;
 
 // Event probabilities 
-export const STORY_EVENT_TRIGGER_PROBABILITY = 0.1;
-export const CHALLENGE_TRIGGER_PROBABILITY = 0.1;
+export const STORY_EVENT_TRIGGER_PROBABILITY = 0.11;
+export const CHALLENGE_TRIGGER_PROBABILITY = 0.08;
 
 // Individual challenge weights (higher = more frequent)
 export const CHALLENGE_WEIGHTS = {

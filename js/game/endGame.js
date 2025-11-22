@@ -2,15 +2,38 @@ import { getState, setEventActive, setPhoneDistracted, setWorking, setPaused, se
 import { GAME_DURATION_SECONDS } from '../config/constants.js';
 import { formatTime } from '../utils/helpers.js';
 import { updateUI, toggleEndScreen, getElement } from '../ui/uiManager.js';
+import { switchVideo, pauseVideo } from '../utils/videoManager.js';
+import { VIDEOS } from '../config/constants.js';
+import { stopGameLoop } from '../game/gameLoop.js';
 
 
 export const endGame = (isWin) => {
-    setEventActive(true);
+    setEventActive(false);
     setPhoneDistracted(false);
     setWorking(false);
     setPaused(false);
     setPhoneClicksRemaining(0);
     setEventMessage(null);
+    stopGameLoop();
+    switchVideo(VIDEOS.IDLE, true);
+    pauseVideo();
+
+    const challengeElements = [
+        'challengeContainer',
+        'challengeTitle',
+        'challengeInstructions',
+        'challengeSequence',
+        'challengeInput',
+        'challengeProgress',
+        'challengeTimer'
+    ];
+
+    challengeElements.forEach(id => {
+        const element = getElement(id);
+        if (element) {
+            element.classList.add('hidden');
+        }
+    });
 
     const workButton = getElement('workButton');
     if (workButton) {

@@ -31,6 +31,28 @@ export class InputHandler {
         this.clearTimers();
     }
 
+    /**
+     * Показує всі елементи челенджів (після приховування при завершенні гри)
+     */
+    showChallengeElements() {
+        const challengeElements = [
+            'challengeContainer',
+            'challengeTitle',
+            'challengeInstructions',
+            'challengeSequence',
+            'challengeInput',
+            'challengeProgress',
+            'challengeTimer'
+        ];
+
+        challengeElements.forEach(id => {
+            const element = this.elements[id];
+            if (element) {
+                element.classList.remove('hidden');
+            }
+        });
+    }
+
     startMiniChallenge(challengeDef) {
         if (!challengeDef) {
             return Promise.resolve({ success: false });
@@ -77,6 +99,8 @@ export class InputHandler {
         if (!expected) return;
         const pressed = event.code;
         if (pressed !== expected) return;
+
+        if (event.repeat) return;
 
         // Додаємо анімацію кнопки при успішному натисканні
         this.animateButtonPress();
@@ -251,11 +275,46 @@ export class InputHandler {
         if (this.activeChallenge.type === 'typing_challenge') {
             input.classList.remove('hidden');
             input.value = '';
+
+            const focusInput = () => {
+                input.focus();
+                input._blurCount = 0;
+            };
+
             input.focus();
+            input._blurCount = 0;
+            setTimeout(focusInput, 50);
+            setTimeout(focusInput, 150);
+            setTimeout(focusInput, 300);
+
+            const handleBlur = () => {
+                if (!input._blurCount) input._blurCount = 0;
+                input._blurCount++;
+
+                if (input._blurCount <= 3) {
+                    setTimeout(() => {
+                        if (this.activeChallenge?.type === 'typing_challenge') {
+                            input.focus();
+                        }
+                    }, 10);
+                }
+            };
+
+            input.addEventListener('blur', handleBlur);
+
+            input._blurHandler = handleBlur;
+
             this.attachTypingListener();
         } else {
             input.classList.add('hidden');
             input.value = '';
+
+            if (input._blurHandler) {
+                input.removeEventListener('blur', input._blurHandler);
+                delete input._blurHandler;
+            }
+            delete input._blurCount;
+
             this.detachTypingListener();
         }
     }

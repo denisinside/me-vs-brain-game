@@ -10,8 +10,6 @@ import {
     FOCUS_RECOVERY_RATE,
     PHONE_DISTRACTION_THRESHOLD,
     PHONE_TRIGGER_CHANCE,
-    CHALLENGE_TRIGGER_PROBABILITY,
-    STORY_EVENT_TRIGGER_PROBABILITY
 } from '../config/constants.js';
 import { shouldTrigger } from '../utils/helpers.js';
 import { updateUI } from '../ui/uiManager.js';

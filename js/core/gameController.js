@@ -76,6 +76,8 @@ export class GameController {
         this.timerManager.start();
         startGameLoop();
 
+        this.inputHandler?.showChallengeElements();
+
         toggleStartScreen(false);
         toggleGameShell(true);
         toggleEndScreen(false);

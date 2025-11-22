@@ -42,18 +42,18 @@ export const CHALLENGE_DEFS = {
         type: 'key_spam_challenge',
         title: 'Спам-клавіша',
         instructions: 'Бий по вказаній клавіші, поки лічильник не дійде до нуля.',
-        durationMs: 5000,
-        requiredHits: 18,
+        durationMs: 4500,
+        requiredHits: 15,
         success: { progressAdjustment: 1.5 },
-        fail: { timePenalty: 12 },
+        fail: { timePenalty: 8 },
     },
     combo_input_challenge: {
         type: 'combo_input_challenge',
         title: 'Комбо-ввід',
         instructions: 'Повтори послідовність клавіш у правильному порядку.',
-        durationMs: 2500,
+        durationMs: 3500,
         success: { progressAdjustment: 2.5 },
-        fail: { timePenalty: 10 },
+        fail: { timePenalty: 7 },
     },
     typing_challenge: {
         type: 'typing_challenge',
@@ -62,7 +62,7 @@ export const CHALLENGE_DEFS = {
         durationMs: 8000,
         penaltyPerMistake: 2,
         success: { progressAdjustment: 4 },
-        fail: { timePenalty: 8 },
+        fail: { timePenalty: 5 },
     },
 };
 
