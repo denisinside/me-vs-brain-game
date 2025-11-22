@@ -21,7 +21,7 @@ export const triggerRandomEvent = () => {
 
     // Get random event from loaded events
     const eventData = getRandomEvent();
-    
+
     if (!eventData) {
         console.warn('Could not get random event');
         return;

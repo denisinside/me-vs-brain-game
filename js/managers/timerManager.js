@@ -39,8 +39,6 @@ export class TimerManager {
             return;
         }
 
-        const delta = this.secondsPerTick * this.tickModifier;
-        decrementTimeLeft(delta);
 
         if (typeof this.onTick === 'function') {
             this.onTick();

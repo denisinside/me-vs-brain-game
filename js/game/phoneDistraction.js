@@ -123,6 +123,16 @@ const handlePhoneEscape = () => {
     const state = getState();
     if (!state.isPhoneDistracted) return;
 
+    // Анімація кнопки при натисканні
+    const workButton = getElement('workButton');
+    if (workButton) {
+        workButton.classList.remove('button-press-intense');
+        workButton.classList.add('button-press-intense');
+        setTimeout(() => {
+            workButton.classList.remove('button-press-intense');
+        }, 200);
+    }
+
     decrementPhoneClicks();
 
     const clicksRemaining = state.phoneClicksRemaining;
@@ -151,7 +161,7 @@ const endPhoneDistraction = () => {
     if (workButton) {
         // Enable button if no blocking conditions are active
         workButton.disabled = state.progress >= 100 || state.isPaused || state.isEventActive || state.isPhoneDistracted || state.workDisabled;
-        workButton.textContent = 'Працювати (натискай!)';
+        workButton.textContent = 'Працювати!';
         workButton.onclick = null;
     }
 

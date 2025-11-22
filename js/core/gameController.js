@@ -17,6 +17,7 @@ import {
 import { shouldTrigger } from '../utils/helpers.js';
 import { triggerPhoneDistraction } from '../game/phoneDistraction.js';
 import { switchVideo, onVideoEnd } from '../utils/videoManager.js';
+import { startGameLoop, stopGameLoop } from '../game/gameLoop.js';
 import {
     toggleStartScreen,
     toggleGameShell,
@@ -56,11 +57,6 @@ export class GameController {
             }
             this.eventManager.setProgressCompletionHandler(() => this.endGame(true));
         }
-
-        this.timerManager.setCallbacks({
-            onTick: () => this.handleTick(),
-            onFinish: () => this.endGame(false),
-        });
     }
 
     startGame(seedStoryId = null) {
@@ -78,6 +74,7 @@ export class GameController {
         const ratio = GAME_DURATION_SECONDS / totalGameMinutes;
         this.timerManager.init(totalGameMinutes, ratio);
         this.timerManager.start();
+        startGameLoop();
 
         toggleStartScreen(false);
         toggleGameShell(true);
@@ -87,7 +84,7 @@ export class GameController {
         const workButton = getElement('workButton');
         if (workButton) {
             workButton.disabled = false;
-            workButton.textContent = 'Працювати (натискай!)';
+            workButton.textContent = 'Працювати!';
         }
 
         const pauseButton = getElement('pauseButton');
@@ -178,6 +175,7 @@ export class GameController {
 
     endGame(isWin) {
         this.timerManager.stop();
+        stopGameLoop();
         if (!this.isGameActive) {
             return;
         }

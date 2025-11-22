@@ -10,6 +10,7 @@ import { randomElement } from '../utils/helpers.js';
 import { applyEffects, getEffectsDescription } from '../game/effectsManager.js';
 import { startEvent, registerEventHooks, playEventOutcome } from '../game/eventSystem.js';
 import { buildChallenge, CHALLENGE_DEFS } from '../config/challenges.js';
+import { CHALLENGE_WEIGHTS, STORY_EVENT_TRIGGER_PROBABILITY, CHALLENGE_TRIGGER_PROBABILITY } from '../config/constants.js';
 
 const EFFECT_MESSAGE_TIMEOUT = 10000;
 
@@ -23,6 +24,12 @@ export class EventManager {
         this.storyEvents = new Map();
         this.availableStoryIds = [];
         this.challengeIds = Object.keys(CHALLENGE_DEFS);
+        this.weightedChallengeIds = [];
+        Object.entries(CHALLENGE_WEIGHTS).forEach(([id, weight]) => {
+            for (let i = 0; i < weight; i++) {
+                this.weightedChallengeIds.push(id);
+            }
+        });
         this.lastEventTimestamp = 0;
         this.cooldownMs = 15000;
         this.pendingOutcome = null;
@@ -96,18 +103,6 @@ export class EventManager {
             return false;
         }
 
-        const probability = this.calculateProbability(state);
-        if (!forceType && Math.random() > probability) {
-            return false;
-        }
-
-        const runChallenge = forceType === 'challenge' ? true : Math.random() < 0.35;
-
-        if (runChallenge && this.challengeIds.length) {
-            this.launchChallengeEvent();
-            return true;
-        }
-
         const event = this.pickStoryEvent();
         if (!event) {
             return false;
@@ -118,10 +113,17 @@ export class EventManager {
         return true;
     }
 
-    calculateProbability(state) {
-        const base = 0.08;
-        const progressBoost = Math.min(0.15, state.progress / 900);
-        const focusPenalty = state.focus < 35 ? 0.06 : 0;
+    calculateEventProbability(state) {
+        const base = STORY_EVENT_TRIGGER_PROBABILITY;
+        const progressBoost = Math.min(0.12, state.progress / 1000);
+        const focusPenalty = state.focus < 50 ? 0.03 : 0;
+        return Math.min(0.3, base + progressBoost + focusPenalty);
+    }
+
+    calculateChallengeProbability(state) {
+        const base = CHALLENGE_TRIGGER_PROBABILITY;
+        const progressBoost = Math.min(0.125, state.progress / 1400);
+        const focusPenalty = state.focus < 35 ? 0.04 : 0;
         return Math.min(0.3, base + progressBoost + focusPenalty);
     }
 
@@ -193,7 +195,7 @@ export class EventManager {
             return;
         }
 
-        const challengeId = randomElement(this.challengeIds);
+        const challengeId = randomElement(this.weightedChallengeIds);
         const challenge = buildChallenge(challengeId);
         if (!challenge) return;
 
@@ -354,3 +356,13 @@ export class EventManager {
         }
     }
 }
+
+let globalEventManager = null;
+
+export const setGlobalEventManager = (manager) => {
+    globalEventManager = manager;
+};
+
+export const getGlobalEventManager = () => {
+    return globalEventManager;
+};

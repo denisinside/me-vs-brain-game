@@ -195,8 +195,10 @@ const startQTE = (eventData) => {
     qteClicksRemaining = qteSettings.clicksToWin;
 
     // Generate random key (using key codes for layout-independent detection)
-    const keyCodes = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyA', 'KeyS', 'KeyD', 'KeyF'];
-    const keyLabels = ['Q', 'W', 'E', 'R', 'A', 'S', 'D', 'F'];
+    // Uses KeyboardEvent.code for physical key position - works with any keyboard layout
+    // Use the same key set as challenges for consistency
+    const keyCodes = ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyJ', 'KeyK', 'KeyL', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU'];
+    const keyLabels = ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U'];
     const randomIndex = Math.floor(Math.random() * keyCodes.length);
     currentQteKey = keyCodes[randomIndex]; // Store key code for detection
     currentQteDisplayKey = keyLabels[randomIndex]; // Store label for display

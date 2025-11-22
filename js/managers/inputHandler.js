@@ -73,10 +73,13 @@ export class InputHandler {
     }
 
     handleKeySpam(event) {
-        const expected = this.activeChallenge.targetKey?.toUpperCase();
+        const expected = this.activeChallenge.targetKey;
         if (!expected) return;
-        const pressed = event.key.toUpperCase();
+        const pressed = event.code;
         if (pressed !== expected) return;
+
+        // Додаємо анімацію кнопки при успішному натисканні
+        this.animateButtonPress();
 
         this.activeChallenge.hits += 1;
         const ratio = this.activeChallenge.hits / this.activeChallenge.requiredHits;
@@ -88,13 +91,16 @@ export class InputHandler {
     }
 
     handleComboInput(event) {
-        const sequence = this.activeChallenge.sequence || [];
+        const sequence = this.activeChallenge.sequence || []; // Array of key codes like ['KeyA', 'KeyS', 'KeyD']
         const currentIndex = this.activeChallenge.index;
         const expected = sequence[currentIndex];
         if (!expected) return;
-        const pressed = event.key.toUpperCase();
+        const pressed = event.code; // Use key code for layout-independent detection
 
         if (pressed === expected) {
+            // Додаємо анімацію кнопки при успішному натисканні
+            this.animateButtonPress();
+
             this.activeChallenge.index += 1;
             this.highlightSequence(this.activeChallenge.index);
             const ratio = this.activeChallenge.index / sequence.length;
@@ -221,7 +227,7 @@ export class InputHandler {
             span.textContent = this.activeChallenge.targetLabel ?? this.activeChallenge.targetKey;
             container.appendChild(span);
         } else if (type === 'combo_input_challenge') {
-            (this.activeChallenge.sequence || []).forEach((key) => {
+            (this.activeChallenge.sequenceLabels || this.activeChallenge.sequence || []).forEach((key) => {
                 const span = document.createElement('span');
                 span.textContent = key;
                 container.appendChild(span);
@@ -305,5 +311,25 @@ export class InputHandler {
         if (resolve) {
             resolve({ success, ...payload });
         }
+    }
+
+    /**
+     * Анімація натискання кнопки для візуального фідбеку
+     */
+    animateButtonPress(intense = false) {
+        const workButton = document.getElementById('work-button');
+        if (!workButton) return;
+
+        // Видаляємо попередні класи анімації
+        workButton.classList.remove('button-press', 'button-press-intense');
+
+        // Додаємо новий клас анімації
+        const animationClass = intense ? 'button-press-intense' : 'button-press';
+        workButton.classList.add(animationClass);
+
+        // Видаляємо клас після завершення анімації
+        setTimeout(() => {
+            workButton.classList.remove(animationClass);
+        }, intense ? 200 : 150);
     }
 }

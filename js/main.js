@@ -10,7 +10,7 @@ import {
 import { setupAutoPause, bindTimerControl } from './controllers/pauseManager.js';
 import { TimerManager } from './managers/timerManager.js';
 import { ProgressManager } from './managers/progressManager.js';
-import { EventManager } from './managers/eventManager.js';
+import { EventManager, setGlobalEventManager } from './managers/eventManager.js';
 import { InputHandler } from './managers/inputHandler.js';
 import { AudioManager } from './managers/audioManager.js';
 import { SaveManager } from './managers/saveManager.js';
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const progressManager = new ProgressManager();
     const inputHandler = new InputHandler({ elements, timerManager });
     const eventManager = new EventManager({ timerManager, progressManager, audioManager, inputHandler });
+    setGlobalEventManager(eventManager);
     const saveManager = new SaveManager();
     const analytics = new Analytics();
     bindTimerControl(timerManager);

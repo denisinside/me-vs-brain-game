@@ -10,13 +10,14 @@ import {
     FOCUS_RECOVERY_RATE,
     PHONE_DISTRACTION_THRESHOLD,
     PHONE_TRIGGER_CHANCE,
-    EVENT_CHANCE_PER_SECOND
+    CHALLENGE_TRIGGER_PROBABILITY,
+    STORY_EVENT_TRIGGER_PROBABILITY
 } from '../config/constants.js';
 import { shouldTrigger } from '../utils/helpers.js';
 import { updateUI } from '../ui/uiManager.js';
-import { triggerRandomEvent } from './events.js';
 import { triggerPhoneDistraction } from './phoneDistraction.js';
 import { endGame } from './endGame.js';
+import { getGlobalEventManager } from '../managers/eventManager.js';
 
 /**
  * Main game loop - runs every second
@@ -53,8 +54,18 @@ export const gameLoop = () => {
     }
 
     // Random events (only if no event is active and not phone distracted)
-    if (!state.isPhoneDistracted && !state.isEventActive && shouldTrigger(EVENT_CHANCE_PER_SECOND)) {
-        triggerRandomEvent();
+    if (!state.isPhoneDistracted && !state.isEventActive) {
+        const eventManager = getGlobalEventManager();
+        const storyProbability = eventManager.calculateEventProbability(state);
+        const challengeProbability = eventManager.calculateChallengeProbability(state);
+        console.log('Story probability:', storyProbability);
+        console.log('Challenge probability:', challengeProbability);
+        if (shouldTrigger(storyProbability)) {
+            eventManager.triggerRandomEvent();
+        }
+        else if (shouldTrigger(challengeProbability)) {
+            eventManager.launchChallengeEvent();
+        }
     }
 };
 
