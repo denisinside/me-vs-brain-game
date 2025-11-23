@@ -9,7 +9,9 @@ import {
 } from '../state/gameState.js';
 import { switchVideo, onVideoEnd } from '../utils/videoManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
+import { getAudioManager } from '../managers/audioManager.js';
 
+const EVENT_AUDIO_KEY = 'story-event';
 let currentEventData = null;
 let currentOutcome = null;
 let qteClicksRemaining = 0;
@@ -36,6 +38,8 @@ export const startEvent = (eventData) => {
     currentEventData = eventData;
     setEventActive(true);
     setCurrentEvent(eventData);
+    const audioManager = getAudioManager();
+    audioManager?.duckBackground(EVENT_AUDIO_KEY, 500);
 
     // Disable work button
     const workButton = getElement('workButton');
@@ -352,6 +356,8 @@ const endEvent = () => {
 
     // Switch back to idle video
     switchVideo('idle.mp4', true);
+    const audioManager = getAudioManager();
+    audioManager?.unduckBackground(EVENT_AUDIO_KEY, 500);
 
     // Re-enable work button if appropriate
     const state = getState();

@@ -13,11 +13,12 @@ import {
     PHONE_TRIGGER_CHANCE,
     GAME_DURATION_SECONDS,
     VIDEOS,
+    AUDIO_SFX,
 } from '../config/constants.js';
 import { shouldTrigger } from '../utils/helpers.js';
 import { triggerPhoneDistraction } from '../game/phoneDistraction.js';
 import { switchVideo, onVideoEnd } from '../utils/videoManager.js';
-import { startGameLoop, stopGameLoop } from '../game/gameLoop.js';
+import { startGameLoop, stopGameLoop, resetGameLoopAudioState } from '../game/gameLoop.js';
 import {
     toggleStartScreen,
     toggleGameShell,
@@ -74,7 +75,9 @@ export class GameController {
         const ratio = GAME_DURATION_SECONDS / totalGameMinutes;
         this.timerManager.init(totalGameMinutes, ratio);
         this.timerManager.start();
+        resetGameLoopAudioState();
         startGameLoop();
+        this.audioManager?.startCalmLoop({ fadeDuration: 300 });
 
         this.inputHandler?.showChallengeElements();
 
@@ -113,6 +116,8 @@ export class GameController {
         if (state.isEventActive || state.isPhoneDistracted || state.isPaused || state.workDisabled) {
             return;
         }
+
+        this.audioManager?.playSFX(AUDIO_SFX.WORK_CLICK);
 
         let progressGain = PROGRESS_PER_CLICK;
         if (state.focus < 25) progressGain *= 0.25;
@@ -196,8 +201,9 @@ export class GameController {
         };
         this.saveManager?.saveResult(summary);
         this.analytics?.log('finish', summary);
-
+        this.audioManager?.stopBackground({ fadeDuration: 600 });
         renderEndGame(isWin);
+        this.audioManager?.playSFX(isWin ? AUDIO_SFX.VICTORY : AUDIO_SFX.DEFEAT);
     }
 }
 

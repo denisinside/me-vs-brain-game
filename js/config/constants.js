@@ -73,3 +73,23 @@ export const DOM_IDS = {
     END_DETAILS: 'end-details',
     THOUGHTS: ['thought-1', 'thought-2', 'thought-3', 'thought-4'],
 };
+
+// Audio assets
+export const AUDIO_TRACKS = {
+    CALM: ['events/bg_calm_loop1.mp3', 'events/bg_calm_loop2.mp3'],
+    DEADLINE: ['events/bg_deadline_loop.mp3'],
+};
+
+export const AUDIO_SFX = {
+    WORK_CLICK: 'events/mouse-click.wav',
+    PHONE_ALERT: 'events/phone-notification.mp3',
+    PHONE_CLEAR: 'events/phone-notification-2.mp3',
+    FOCUS_REFRESH: 'events/focus_refresh.mp3',
+    CHALLENGE_SUCCESS: 'events/success.wav',
+    CHALLENGE_FAIL: 'events/failure-trumpets-2.mp3',
+    CHALLENGE_MISTAKE: 'events/wrong-answer.wav',
+    WINDOWS_ERROR: 'events/windows_error.mp3',
+    PANIC: 'events/aaaahhhh_sfx.mp3',
+    VICTORY: 'events/success_trumpets.mp3',
+    DEFEAT: 'events/failure-trumpets.mp3',
+};

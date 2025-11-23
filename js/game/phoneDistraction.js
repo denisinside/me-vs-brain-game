@@ -7,11 +7,13 @@ import {
     decrementPhoneClicks,
     adjustFocus
 } from '../state/gameState.js';
-import { PHONE_ESCAPE_CLICKS, VIDEOS } from '../config/constants.js';
+import { PHONE_ESCAPE_CLICKS, VIDEOS, AUDIO_SFX } from '../config/constants.js';
 import { switchVideo } from '../utils/videoManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
 import { randomElement } from '../utils/helpers.js';
+import { getAudioManager } from '../managers/audioManager.js';
 
+const PHONE_AUDIO_KEY = 'phone-distraction';
 let phoneMockupTimeout = null;
 
 /**
@@ -98,6 +100,9 @@ export const triggerPhoneDistraction = () => {
     setEventActive(true);
     setPhoneClicksRemaining(PHONE_ESCAPE_CLICKS);
     setEventMessage('Ти заліз у телефон! Швидко клацай, щоб вирватись!');
+    const audioManager = getAudioManager();
+    audioManager?.duckBackground(PHONE_AUDIO_KEY, 400);
+    audioManager?.playSFX(AUDIO_SFX.PHONE_ALERT);
 
     const workButton = getElement('workButton');
     if (workButton) {
@@ -166,5 +171,8 @@ const endPhoneDistraction = () => {
     }
 
     switchVideo(VIDEOS.IDLE, true);
+    const audioManager = getAudioManager();
+    audioManager?.unduckBackground(PHONE_AUDIO_KEY, 400);
+    audioManager?.playSFX(AUDIO_SFX.FOCUS_REFRESH);
     updateUI();
 };

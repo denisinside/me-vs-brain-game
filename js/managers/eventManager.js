@@ -10,9 +10,10 @@ import { randomElement } from '../utils/helpers.js';
 import { applyEffects, getEffectsDescription } from '../game/effectsManager.js';
 import { startEvent, registerEventHooks, playEventOutcome } from '../game/eventSystem.js';
 import { buildChallenge, CHALLENGE_DEFS } from '../config/challenges.js';
-import { CHALLENGE_WEIGHTS, STORY_EVENT_TRIGGER_PROBABILITY, CHALLENGE_TRIGGER_PROBABILITY } from '../config/constants.js';
+import { CHALLENGE_WEIGHTS, STORY_EVENT_TRIGGER_PROBABILITY, CHALLENGE_TRIGGER_PROBABILITY, AUDIO_SFX } from '../config/constants.js';
 
 const EFFECT_MESSAGE_TIMEOUT = 10000;
+const CHALLENGE_AUDIO_KEY = 'challenge-event';
 
 export class EventManager {
     constructor({ timerManager, progressManager, audioManager, inputHandler } = {}) {
@@ -171,6 +172,24 @@ export class EventManager {
             }, EFFECT_MESSAGE_TIMEOUT);
         }
 
+        const hasNegativePenalty = Array.isArray(outcome.effects) && outcome.effects.some((effect) => {
+            if (!effect?.type) return false;
+            if (effect.type === 'modify_time' || effect.type === 'modify_progress') {
+                return (effect.value ?? 0) < 0;
+            }
+            if (effect.type === 'modify_progress_rate') {
+                return typeof effect.value === 'number' && effect.value < 1;
+            }
+            if (effect.type === 'disable_work') {
+                return true;
+            }
+            return false;
+        });
+
+        if (hasNegativePenalty && this.audioManager) {
+            this.audioManager.playSFX(AUDIO_SFX.WINDOWS_ERROR);
+        }
+
         if (outcome.sound && this.audioManager) {
             this.audioManager.playVoice(outcome.sound);
         }
@@ -207,6 +226,8 @@ export class EventManager {
         }
         updateUI();
         this.logAnalytics('event_triggered', { eventId: challengeId, type: 'challenge' });
+
+        this.audioManager?.duckBackground(CHALLENGE_AUDIO_KEY, 400);
 
         this.inputHandler
             .startMiniChallenge(challenge)
@@ -259,6 +280,14 @@ export class EventManager {
 
         updateUI();
         this.logAnalytics('challenge_result', { challengeId, success: result?.success });
+        if (this.audioManager) {
+            if (result?.success) {
+                this.audioManager.playSFX(AUDIO_SFX.CHALLENGE_SUCCESS);
+            } else {
+                this.audioManager.playSFX(AUDIO_SFX.CHALLENGE_FAIL);
+            }
+            this.audioManager.unduckBackground(CHALLENGE_AUDIO_KEY, 400);
+        }
         this.markEventCooldown();
 
         if (getState().progress >= 100 && this.onProgressCompletion) {

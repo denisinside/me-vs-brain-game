@@ -1,4 +1,12 @@
+import { AUDIO_SFX } from '../config/constants.js';
+import { getAudioManager } from './audioManager.js';
+
 const IGNORE_KEYS = ['Shift', 'Alt', 'Control', 'Meta', 'Escape'];
+
+const playMistakeSound = () => {
+    const audioManager = getAudioManager();
+    audioManager?.playSFX(AUDIO_SFX.CHALLENGE_MISTAKE);
+};
 
 const getMatchingPrefixLength = (value, target) => {
     const max = Math.min(value.length, target.length);
@@ -134,6 +142,7 @@ export class InputHandler {
             }
         } else {
             this.activeChallenge.mistakes += 1;
+            playMistakeSound();
             if (this.activeChallenge.allowedMistakes !== undefined &&
                 this.activeChallenge.mistakes > this.activeChallenge.allowedMistakes) {
                 this.finish(false, 'combo-fail');
@@ -202,6 +211,7 @@ export class InputHandler {
     handleTypingMistake() {
         if (!this.activeChallenge) return;
         this.activeChallenge.mistakes += 1;
+        playMistakeSound();
         if (this.activeChallenge.penaltyPerMistake && this.timerManager) {
             this.timerManager.applyTimePenalty(this.activeChallenge.penaltyPerMistake);
         }

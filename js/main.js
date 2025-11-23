@@ -13,7 +13,7 @@ import { TimerManager } from './managers/timerManager.js';
 import { ProgressManager } from './managers/progressManager.js';
 import { EventManager, setGlobalEventManager } from './managers/eventManager.js';
 import { InputHandler } from './managers/inputHandler.js';
-import { AudioManager } from './managers/audioManager.js';
+import { AudioManager, setGlobalAudioManager } from './managers/audioManager.js';
 import { SaveManager } from './managers/saveManager.js';
 import { Analytics } from './managers/analytics.js';
 import { initGameController } from './core/gameController.js';
@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initUIManager(elements);
 
     const audioManager = new AudioManager();
+    setGlobalAudioManager(audioManager);
     const timerManager = new TimerManager({});
     const progressManager = new ProgressManager();
     const inputHandler = new InputHandler({ elements, timerManager });

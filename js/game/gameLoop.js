@@ -10,12 +10,19 @@ import {
     FOCUS_RECOVERY_RATE,
     PHONE_DISTRACTION_THRESHOLD,
     PHONE_TRIGGER_CHANCE,
+    GAME_DURATION_SECONDS,
+    AUDIO_SFX,
 } from '../config/constants.js';
 import { shouldTrigger } from '../utils/helpers.js';
 import { updateUI } from '../ui/uiManager.js';
 import { triggerPhoneDistraction } from './phoneDistraction.js';
 import { endGame } from './endGame.js';
 import { getGlobalEventManager } from '../managers/eventManager.js';
+import { getAudioManager } from '../managers/audioManager.js';
+
+const DEADLINE_THRESHOLD = Math.max(30, Math.round(GAME_DURATION_SECONDS * 0.25));
+let deadlineMusicTriggered = false;
+let lowFocusCueTriggered = false;
 
 /**
  * Main game loop - runs every second
@@ -30,6 +37,8 @@ export const gameLoop = () => {
 
     // Decrease time
     decrementTimeLeft(1);
+    handleDeadlineMusic(state);
+    handleLowFocusCue(state);
 
     // Update focus based on phone distraction
     if (!state.isPhoneDistracted && !state.isEventActive) {
@@ -81,3 +90,31 @@ export const stopGameLoop = () => {
         setGameLoopInterval(null);
     }
 };
+
+export const resetGameLoopAudioState = () => {
+    deadlineMusicTriggered = false;
+    lowFocusCueTriggered = false;
+};
+
+function handleDeadlineMusic(state) {
+    if (deadlineMusicTriggered) return;
+    if (state.timeLeft > DEADLINE_THRESHOLD) return;
+    const audioManager = getAudioManager();
+    if (!audioManager) return;
+    deadlineMusicTriggered = true;
+    audioManager.switchToDeadlineLoop({ fadeDuration: 800 });
+}
+
+function handleLowFocusCue(state) {
+    const audioManager = getAudioManager();
+    if (!audioManager) return;
+    if (!lowFocusCueTriggered && state.focus <= 20) {
+        lowFocusCueTriggered = true;
+        audioManager.playSFX(AUDIO_SFX.PANIC);
+        return;
+    }
+
+    if (lowFocusCueTriggered && state.focus >= 40) {
+        lowFocusCueTriggered = false;
+    }
+}
