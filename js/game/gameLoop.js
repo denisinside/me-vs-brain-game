@@ -17,9 +17,10 @@ import {
 import { shouldTrigger } from '../utils/helpers.js';
 import { updateUI } from '../ui/uiManager.js';
 import { triggerPhoneDistraction } from './phoneDistraction.js';
-import { endGame } from './endGame.js';
+import { endGame as renderStandaloneEndGame } from './endGame.js';
 import { getGlobalEventManager } from '../managers/eventManager.js';
 import { getAudioManager } from '../managers/audioManager.js';
+import { getGameController } from '../core/gameController.js';
 
 const DEADLINE_THRESHOLD = Math.max(30, Math.round(GAME_DURATION_SECONDS * 0.25));
 let deadlineMusicTriggered = false;
@@ -37,7 +38,7 @@ export const gameLoop = () => {
     }
 
     if (state.timeLeft <= 0) {
-        endGame(false);
+        handleLoss();
         return;
     }
 
@@ -68,7 +69,7 @@ export const gameLoop = () => {
 
     // Check lose condition
     if (state.timeLeft <= 0) {
-        endGame(false);
+        handleLoss();
         return;
     }
 
@@ -128,5 +129,14 @@ function handleLowFocusCue(state) {
 
     if (lowFocusCueTriggered && state.focus >= 40) {
         lowFocusCueTriggered = false;
+    }
+}
+
+function handleLoss() {
+    const controller = getGameController();
+    if (controller) {
+        controller.endGame(false);
+    } else {
+        renderStandaloneEndGame(false);
     }
 }

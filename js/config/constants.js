@@ -1,5 +1,5 @@
 // Game duration and timing
-export const GAME_DURATION_SECONDS = 180; // 3 minutes
+export const GAME_DURATION_SECONDS = 10; // 3 minutes
 
 // Progress and gameplay
 export const PROGRESS_PER_CLICK = 0.425;
@@ -21,7 +21,7 @@ export const CHALLENGE_DURATION_MULTIPLIER = 5;
 
 // Event probabilities 
 export const STORY_EVENT_TRIGGER_PROBABILITY = 0.11;
-export const CHALLENGE_TRIGGER_PROBABILITY = 0.08;
+export const CHALLENGE_TRIGGER_PROBABILITY = 0.45;
 
 // Individual challenge weights (higher = more frequent)
 export const CHALLENGE_WEIGHTS = {
