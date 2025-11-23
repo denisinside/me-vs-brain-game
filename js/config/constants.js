@@ -21,7 +21,7 @@ export const CHALLENGE_DURATION_MULTIPLIER = 5;
 
 // Event probabilities 
 export const STORY_EVENT_TRIGGER_PROBABILITY = 0.11;
-export const CHALLENGE_TRIGGER_PROBABILITY = 0.45;
+export const CHALLENGE_TRIGGER_PROBABILITY = 0.35;
 
 // Individual challenge weights (higher = more frequent)
 export const CHALLENGE_WEIGHTS = {
