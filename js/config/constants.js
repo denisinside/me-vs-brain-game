@@ -1,5 +1,5 @@
 // Game duration and timing
-export const GAME_DURATION_SECONDS = 10; // 3 minutes
+export const GAME_DURATION_SECONDS = 180; // 3 minutes
 
 // Progress and gameplay
 export const PROGRESS_PER_CLICK = 0.425;
