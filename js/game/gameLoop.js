@@ -42,7 +42,7 @@ export const gameLoop = () => {
         return;
     }
 
-    const shouldFreezeTime = isTimeFreezeOnEventsEnabled() && state.isEventActive && !state.isPhoneDistracted;
+    const shouldFreezeTime = isTimeFreezeOnEventsEnabled() && state.isEventActive && !state.isChallengeActive && !state.isPhoneDistracted;
     if (shouldFreezeTime) {
         updateUI();
         return;

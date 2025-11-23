@@ -1,4 +1,4 @@
-import { getState, setEventActive, setPhoneDistracted, setWorking, setPaused, setPhoneClicksRemaining, setEventMessage, getEventEpilogues } from '../state/gameState.js';
+import { getState, setEventActive, setPhoneDistracted, setWorking, setPaused, setPhoneClicksRemaining, setEventMessage, getEventEpilogues, setChallengeActive } from '../state/gameState.js';
 import { GAME_DURATION_SECONDS } from '../config/constants.js';
 import { formatTime } from '../utils/helpers.js';
 import { updateUI, toggleEndScreen, getElement } from '../ui/uiManager.js';
@@ -9,6 +9,7 @@ import { stopGameLoop } from '../game/gameLoop.js';
 
 export const endGame = (isWin) => {
     setEventActive(false);
+    setChallengeActive(false);
     setPhoneDistracted(false);
     setWorking(false);
     setPaused(false);

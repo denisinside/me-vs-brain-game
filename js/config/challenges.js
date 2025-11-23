@@ -1,12 +1,12 @@
 import { randomElement } from '../utils/helpers.js';
 
 const KEY_CODES = [
-    'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyJ', 'KeyK', 'KeyL',
+    'KeyA', 'KeyS', 'KeyD', 'KeyJ', 'KeyK', 'KeyL',
     'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU'
 ];
 
 const KEY_LABELS = [
-    'A', 'S', 'D', 'F', 'J', 'K', 'L',
+    'A', 'S', 'D', 'J', 'K', 'L',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U'
 ];
 
@@ -42,7 +42,7 @@ export const CHALLENGE_DEFS = {
         type: 'key_spam_challenge',
         title: 'Спам-клавіша',
         instructions: 'Бий по вказаній клавіші, поки лічильник не дійде до нуля.',
-        durationMs: 4500,
+        durationMs: 4000,
         requiredHits: 15,
         success: { progressAdjustment: 1.5 },
         fail: { timePenalty: 8 },
@@ -51,7 +51,7 @@ export const CHALLENGE_DEFS = {
         type: 'combo_input_challenge',
         title: 'Комбо-ввід',
         instructions: 'Повтори послідовність клавіш у правильному порядку.',
-        durationMs: 3500,
+        durationMs: 3000,
         success: { progressAdjustment: 2.5 },
         fail: { timePenalty: 7 },
     },
@@ -59,7 +59,7 @@ export const CHALLENGE_DEFS = {
         type: 'typing_challenge',
         title: 'Швидкий друк',
         instructions: 'Набери фразу без помилок. Кожна помилка з’їдає час.',
-        durationMs: 8000,
+        durationMs: 6000,
         penaltyPerMistake: 2,
         success: { progressAdjustment: 4 },
         fail: { timePenalty: 5 },

@@ -9,8 +9,8 @@ export class AudioManager {
     constructor() {
         this.backgroundAudio = null;
         this.groupVolume = {
-            background: 0.5,
-            sfx: 1.0,
+            background: 0.75,
+            sfx: 0.8,
             voice: 1.0,
         };
         this.muted = false;

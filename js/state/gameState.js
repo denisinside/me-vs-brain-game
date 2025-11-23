@@ -7,6 +7,7 @@ const state = {
     focus: 100,
     gameLoopInterval: null,
     isEventActive: false,
+    isChallengeActive: false,
     isWorking: false,
     isPhoneDistracted: false,
     isPaused: false,
@@ -29,6 +30,7 @@ export const getProgress = () => state.progress;
 export const getTimeLeft = () => state.timeLeft;
 export const getFocus = () => state.focus;
 export const isEventActive = () => state.isEventActive;
+export const isChallengeActive = () => state.isChallengeActive;
 export const isWorking = () => state.isWorking;
 export const isPhoneDistracted = () => state.isPhoneDistracted;
 export const isPaused = () => state.isPaused;
@@ -47,6 +49,7 @@ export const setProgress = (value) => { state.progress = value; };
 export const setTimeLeft = (value) => { state.timeLeft = value; };
 export const setFocus = (value) => { state.focus = value; };
 export const setEventActive = (value) => { state.isEventActive = value; };
+export const setChallengeActive = (value) => { state.isChallengeActive = value; };
 export const setWorking = (value) => { state.isWorking = value; };
 export const setPhoneDistracted = (value) => { state.isPhoneDistracted = value; };
 export const setPaused = (value) => { state.isPaused = value; };
@@ -147,6 +150,7 @@ export const resetState = () => {
     state.timeLeft = GAME_DURATION_SECONDS;
     state.focus = 100;
     state.isEventActive = false;
+    state.isChallengeActive = false;
     state.isWorking = false;
     state.isPhoneDistracted = false;
     state.isPaused = false;

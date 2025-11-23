@@ -227,7 +227,6 @@ export class EventManager {
         updateUI();
         this.logAnalytics('event_triggered', { eventId: challengeId, type: 'challenge' });
 
-        this.audioManager?.duckBackground(CHALLENGE_AUDIO_KEY, 400);
 
         this.inputHandler
             .startMiniChallenge(challenge)
@@ -286,7 +285,6 @@ export class EventManager {
             } else {
                 this.audioManager.playSFX(AUDIO_SFX.CHALLENGE_FAIL);
             }
-            this.audioManager.unduckBackground(CHALLENGE_AUDIO_KEY, 400);
         }
         this.markEventCooldown();
 

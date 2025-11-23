@@ -1,4 +1,5 @@
-import { AUDIO_SFX, CHALLENGE_DURATION_MULTIPLIER } from '../config/constants.js';
+import { AUDIO_SFX, CHALLENGE_DURATION_MULTIPLIER, GAME_DURATION_SECONDS } from '../config/constants.js';
+import { setChallengeActive, getTimeLeft } from '../state/gameState.js';
 import { getAudioManager } from './audioManager.js';
 
 const IGNORE_KEYS = ['Shift', 'Alt', 'Control', 'Meta', 'Escape'];
@@ -6,6 +7,24 @@ const IGNORE_KEYS = ['Shift', 'Alt', 'Control', 'Meta', 'Escape'];
 const playMistakeSound = () => {
     const audioManager = getAudioManager();
     audioManager?.playSFX(AUDIO_SFX.CHALLENGE_MISTAKE);
+};
+
+/**
+ * Розраховує динамічний множник тривалості challenge залежно від залишкового часу
+ * Використовує базовий CHALLENGE_DURATION_MULTIPLIER з динамічними коефіцієнтами
+ */
+const getDynamicDurationMultiplier = () => {
+    const timeLeft = getTimeLeft();
+
+    if (timeLeft >= 120) {
+        return CHALLENGE_DURATION_MULTIPLIER;
+    } else if (timeLeft >= 60) {
+        const ratio = (timeLeft - 60) / 60;
+        const coefficient = 0.5 + ratio * 0.5;
+        return CHALLENGE_DURATION_MULTIPLIER * coefficient;
+    } else {
+        return 1.0;
+    }
 };
 
 const getMatchingPrefixLength = (value, target) => {
@@ -78,11 +97,11 @@ export class InputHandler {
             rawInputValue: '',
         };
 
+        setChallengeActive(true);
+
         this.renderChallenge();
 
-        const multiplier = Number.isFinite(CHALLENGE_DURATION_MULTIPLIER) && CHALLENGE_DURATION_MULTIPLIER > 0
-            ? CHALLENGE_DURATION_MULTIPLIER
-            : 1;
+        const multiplier = getDynamicDurationMultiplier();
         const baseDuration = Math.max(0, Number(challengeDef.durationMs) || 0);
         const adjustedDuration = Math.max(0, Math.round(baseDuration * multiplier));
         const effectiveDuration = adjustedDuration || baseDuration;
@@ -384,6 +403,8 @@ export class InputHandler {
         const resolve = this.challengeResolve;
         this.activeChallenge = null;
         this.challengeResolve = null;
+
+        setChallengeActive(false);
 
         if (resolve) {
             resolve({ success, ...payload });
