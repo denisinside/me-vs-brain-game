@@ -1,4 +1,4 @@
-import { AUDIO_SFX } from '../config/constants.js';
+import { AUDIO_SFX, CHALLENGE_DURATION_MULTIPLIER } from '../config/constants.js';
 import { getAudioManager } from './audioManager.js';
 
 const IGNORE_KEYS = ['Shift', 'Alt', 'Control', 'Meta', 'Escape'];
@@ -80,8 +80,16 @@ export class InputHandler {
 
         this.renderChallenge();
 
-        this.remainingMs = challengeDef.durationMs;
-        this.challengeTimeout = setTimeout(() => this.finish(false, 'timeout'), challengeDef.durationMs);
+        const multiplier = Number.isFinite(CHALLENGE_DURATION_MULTIPLIER) && CHALLENGE_DURATION_MULTIPLIER > 0
+            ? CHALLENGE_DURATION_MULTIPLIER
+            : 1;
+        const baseDuration = Math.max(0, Number(challengeDef.durationMs) || 0);
+        const adjustedDuration = Math.max(0, Math.round(baseDuration * multiplier));
+        const effectiveDuration = adjustedDuration || baseDuration;
+
+        this.remainingMs = effectiveDuration;
+        this.activeChallenge.totalDurationMs = effectiveDuration;
+        this.challengeTimeout = setTimeout(() => this.finish(false, 'timeout'), effectiveDuration);
         this.countdownInterval = setInterval(() => this.updateTimer(), 100);
 
         return new Promise((resolve) => {

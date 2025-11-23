@@ -14,6 +14,11 @@ export const PHONE_DISTRACTION_THRESHOLD = 40;
 export const PHONE_ESCAPE_CLICKS = 20;
 export const PHONE_TRIGGER_CHANCE = 0.11;
 
+// Feature flags
+export const ENABLE_TIME_FREEZE_ON_EVENTS = true;
+export const QTE_DURATION_MULTIPLIER = 1;
+export const CHALLENGE_DURATION_MULTIPLIER = 5;
+
 // Event probabilities 
 export const STORY_EVENT_TRIGGER_PROBABILITY = 0.11;
 export const CHALLENGE_TRIGGER_PROBABILITY = 0.08;

@@ -1,4 +1,4 @@
-import { GAME_DURATION_SECONDS } from '../config/constants.js';
+import { GAME_DURATION_SECONDS, ENABLE_TIME_FREEZE_ON_EVENTS } from '../config/constants.js';
 
 // Centralized game state
 const state = {
@@ -20,6 +20,7 @@ const state = {
     workDisabled: false, // Whether work button is disabled
     workDisableTimeout: null, // Timeout for temporary work disable
     activeEffectsDescription: null, // Description of currently active effects
+    pauseTimeOnEvents: ENABLE_TIME_FREEZE_ON_EVENTS,
 };
 
 // Getters
@@ -39,6 +40,7 @@ export const getEventEpilogues = () => state.eventEpilogues;
 export const getProgressRateModifier = () => state.progressRateModifier;
 export const isWorkDisabled = () => state.workDisabled;
 export const getActiveEffectsDescription = () => state.activeEffectsDescription;
+export const isTimeFreezeOnEventsEnabled = () => state.pauseTimeOnEvents;
 
 // Setters
 export const setProgress = (value) => { state.progress = value; };
@@ -55,6 +57,7 @@ export const setCurrentEvent = (value) => { state.currentEvent = value; };
 export const setProgressRateModifier = (value) => { state.progressRateModifier = value; };
 export const setWorkDisabled = (value) => { state.workDisabled = value; };
 export const setActiveEffectsDescription = (value) => { state.activeEffectsDescription = value; };
+export const setTimeFreezeOnEventsEnabled = (value) => { state.pauseTimeOnEvents = Boolean(value); };
 
 // Complex state operations
 export const incrementProgress = (amount) => {
@@ -152,6 +155,7 @@ export const resetState = () => {
     state.currentEvent = null;
     state.eventEpilogues = [];
     state.activeEffectsDescription = null;
+    state.pauseTimeOnEvents = ENABLE_TIME_FREEZE_ON_EVENTS;
 
     if (state.gameLoopInterval) {
         clearInterval(state.gameLoopInterval);

@@ -3,7 +3,8 @@ import {
     decrementTimeLeft,
     adjustFocus,
     setGameLoopInterval,
-    getGameLoopInterval
+    getGameLoopInterval,
+    isTimeFreezeOnEventsEnabled,
 } from '../state/gameState.js';
 import {
     FOCUS_DECAY_RATE,
@@ -31,6 +32,17 @@ export const gameLoop = () => {
     const state = getState();
 
     if (state.isPaused) {
+        updateUI();
+        return;
+    }
+
+    if (state.timeLeft <= 0) {
+        endGame(false);
+        return;
+    }
+
+    const shouldFreezeTime = isTimeFreezeOnEventsEnabled() && state.isEventActive && !state.isPhoneDistracted;
+    if (shouldFreezeTime) {
         updateUI();
         return;
     }
