@@ -20,11 +20,14 @@ let phoneMockupTimeout = null;
  * List of TikTok video files
  */
 const TIKTOK_VIDEOS = [
-    'tiktok1.mp4', 'tiktok2.mp4', 'tiktok3.mp4', 'tiktok4.mp4', 'tiktok5.mp4',
-    'tiktok6.mp4', 'tiktok7.mp4', 'tiktok8.mp4', 'tiktok9.MP4', 'tiktok10.mp4',
-    'tiktok11.mp4', 'tiktok12.mp4', 'tiktok13.mp4', 'tiktok14.mp4', 'tiktok15.MP4',
-    'tiktok16.mp4', 'tiktok17.mp4', 'tiktok18.mp4', 'tiktok19.mp4', 'tiktok20.mp4'
-];
+        'tiktok1.mp4', 'tiktok2.mp4', 'tiktok3.mp4', 'tiktok4.mp4', 'tiktok5.mp4',
+            'tiktok6.mp4', 'tiktok7.mp4', 'tiktok8.mp4', 'tiktok9.MP4', 'tiktok10.mp4',
+            'tiktok11.mp4', 'tiktok12.mp4', 'tiktok13.mp4', 'tiktok14.mp4', 'tiktok15.MP4',
+            'tiktok16.mp4', 'tiktok17.mp4', 'tiktok18.mp4', 'tiktok19.mp4', 'tiktok20.mp4',
+            'tiktok21.mp4', 'tiktok22.mp4', 'tiktok23.mp4', 'tiktok24.mp4', 'tiktok25.mp4',
+            'tiktok26.mp4', 'tiktok27.mp4', 'tiktok28.mp4', 'tiktok29.mp4', 'tiktok30.mp4',
+            'tiktok31.mp4', 'tiktok32.mp4'
+    ];
 
 /**
  * Show phone mockup with random TikTok video
