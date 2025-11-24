@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/assets/images/favicon.png">
     <title>Me vs My Brain: Прототип</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -11,12 +12,27 @@
     <div id="start-screen" class="screen overlay">
         <div class="screen-content">
             <h1>Me vs My Brain</h1>
+
             <div id="prologue">
                 <p>Студент Денис прокинувся о 2 ночі з жахливим усвідомленням...</p>
                 <p>Дедлайн завдання з "Технологій мультимедіа" через годину!</p>
                 <p>Треба зосередитись і зробити все за цей час.</p>
                 <p>Але його мозок має інші плани...</p>
             </div>
+            <hr class="hr hidden">
+            <button id="toggle-tutorial-btn" class="tutorial-toggle">
+                Показати туторіал
+            </button>
+
+            <div id="tutorial-dropdown" class="tutorial-dropdown hidden">
+                <h2>Геймплей</h2>
+                <p>Якщо коротко, ігровий процес складається з менеджменту часу та рівнів прогресу та фокусу!</p>
+                <p>Твоя задача, як гравця, виконати завдання, на яке дається обмежений час.
+                    Виконується це задання шляхом швидкого натискання по клавішам та реагування на нестандарнті ситуації,
+                    що виникають час від часу.
+                </p>
+            </div>
+            <hr class="hr hidden">
             <button id="start-button">Почати боротьбу!</button>
         </div>
     </div>
@@ -70,16 +86,12 @@
         <div class="game-container">
             <aside class="sidebar">
                 <h3 id="sidebar-title">Думки в голові</h3>
-                
-                <!-- Event popup - shows in sidebar instead of thoughts -->
                 <div id="event-popup" class="event-popup hidden">
                     <div class="event-content">
                         <h2 id="event-title"></h2>
                         <p id="event-description"></p>
                     </div>
                 </div>
-
-                <!-- Thoughts - hidden when event is active -->
                 <div id="thoughts-container">
                     <div class="thought-bubble" id="thought-1">
                         <p>Може, забити на це і піти спати?</p>
@@ -94,11 +106,7 @@
                         <p>У мене чемоданне настроєніє! Не хочу вчитись!</p>
                     </div>
                 </div>
-
-                <!-- Choice buttons - shows in sidebar instead of avatar -->
                 <div id="choice-container" class="choice-container hidden"></div>
-
-                <!-- Avatar - hidden when choices are shown -->
                 <div class="avatar-card" id="avatar-card">
                     <img src="assets/images/student-avatar.gif" alt="Студент Денис">
                 </div>
@@ -136,7 +144,7 @@
                         </div>
                     </div>
 
-                        <div class="status-card">
+                    <div class="status-card">
                         <div class="status-icon">
                             <img src="assets/images/progress.png" alt="Фокус">
                         </div>

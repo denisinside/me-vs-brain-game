@@ -16,6 +16,7 @@ import { AudioManager } from './managers/audioManager.js';
 import { SaveManager } from './managers/saveManager.js';
 import { Analytics } from './managers/analytics.js';
 import { initGameController } from './core/gameController.js';
+import { initStartScreenControls } from './controllers/startScreenController.js';
 
 /**
  * Initialize the game when DOM is ready
@@ -52,6 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveManager,
         analytics,
     });
+
+    // Initialize start screen logic
+    initStartScreenControls(elements.startScreen, handleStartClick);
 
     // Set up event listeners
     setupEventListeners(elements);
@@ -163,10 +167,6 @@ function gatherDOMElements() {
 function setupEventListeners(elements) {
     if (elements.workButton) {
         elements.workButton.addEventListener('click', handleWorkClick);
-    }
-
-    if (elements.startButton) {
-        elements.startButton.addEventListener('click', handleStartClick);
     }
 
     if (elements.restartButton) {
