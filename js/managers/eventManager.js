@@ -10,8 +10,10 @@ import { randomElement } from '../utils/helpers.js';
 import { applyEffects, getEffectsDescription } from '../game/effectsManager.js';
 import { startEvent, registerEventHooks, playEventOutcome } from '../game/eventSystem.js';
 import { buildChallenge, CHALLENGE_DEFS } from '../config/challenges.js';
+import { CHALLENGE_WEIGHTS, STORY_EVENT_TRIGGER_PROBABILITY, CHALLENGE_TRIGGER_PROBABILITY, AUDIO_SFX } from '../config/constants.js';
 
 const EFFECT_MESSAGE_TIMEOUT = 10000;
+const CHALLENGE_AUDIO_KEY = 'challenge-event';
 
 export class EventManager {
     constructor({ timerManager, progressManager, audioManager, inputHandler } = {}) {
@@ -23,6 +25,12 @@ export class EventManager {
         this.storyEvents = new Map();
         this.availableStoryIds = [];
         this.challengeIds = Object.keys(CHALLENGE_DEFS);
+        this.weightedChallengeIds = [];
+        Object.entries(CHALLENGE_WEIGHTS).forEach(([id, weight]) => {
+            for (let i = 0; i < weight; i++) {
+                this.weightedChallengeIds.push(id);
+            }
+        });
         this.lastEventTimestamp = 0;
         this.cooldownMs = 15000;
         this.pendingOutcome = null;
@@ -96,18 +104,6 @@ export class EventManager {
             return false;
         }
 
-        const probability = this.calculateProbability(state);
-        if (!forceType && Math.random() > probability) {
-            return false;
-        }
-
-        const runChallenge = forceType === 'challenge' ? true : Math.random() < 0.35;
-
-        if (runChallenge && this.challengeIds.length) {
-            this.launchChallengeEvent();
-            return true;
-        }
-
         const event = this.pickStoryEvent();
         if (!event) {
             return false;
@@ -118,10 +114,17 @@ export class EventManager {
         return true;
     }
 
-    calculateProbability(state) {
-        const base = 0.08;
-        const progressBoost = Math.min(0.15, state.progress / 900);
-        const focusPenalty = state.focus < 35 ? 0.06 : 0;
+    calculateEventProbability(state) {
+        const base = STORY_EVENT_TRIGGER_PROBABILITY;
+        const progressBoost = Math.min(0.12, state.progress / 1000);
+        const focusPenalty = state.focus < 50 ? 0.03 : 0;
+        return Math.min(0.3, base + progressBoost + focusPenalty);
+    }
+
+    calculateChallengeProbability(state) {
+        const base = CHALLENGE_TRIGGER_PROBABILITY;
+        const progressBoost = Math.min(0.125, state.progress / 1400);
+        const focusPenalty = state.focus < 35 ? 0.04 : 0;
         return Math.min(0.3, base + progressBoost + focusPenalty);
     }
 
@@ -169,8 +172,26 @@ export class EventManager {
             }, EFFECT_MESSAGE_TIMEOUT);
         }
 
+        const hasNegativePenalty = Array.isArray(outcome.effects) && outcome.effects.some((effect) => {
+            if (!effect?.type) return false;
+            if (effect.type === 'modify_time' || effect.type === 'modify_progress') {
+                return (effect.value ?? 0) < 0;
+            }
+            if (effect.type === 'modify_progress_rate') {
+                return typeof effect.value === 'number' && effect.value < 1;
+            }
+            if (effect.type === 'disable_work') {
+                return true;
+            }
+            return false;
+        });
+
+        if (hasNegativePenalty && this.audioManager) {
+            this.audioManager.playSFX(AUDIO_SFX.WINDOWS_ERROR);
+        }
+
         if (outcome.sound && this.audioManager) {
-            this.audioManager.playSFX(outcome.sound);
+            this.audioManager.playVoice(outcome.sound);
         }
 
         if (outcome.epilogueTexts?.length) {
@@ -193,7 +214,7 @@ export class EventManager {
             return;
         }
 
-        const challengeId = randomElement(this.challengeIds);
+        const challengeId = randomElement(this.weightedChallengeIds);
         const challenge = buildChallenge(challengeId);
         if (!challenge) return;
 
@@ -205,6 +226,7 @@ export class EventManager {
         }
         updateUI();
         this.logAnalytics('event_triggered', { eventId: challengeId, type: 'challenge' });
+
 
         this.inputHandler
             .startMiniChallenge(challenge)
@@ -257,6 +279,13 @@ export class EventManager {
 
         updateUI();
         this.logAnalytics('challenge_result', { challengeId, success: result?.success });
+        if (this.audioManager) {
+            if (result?.success) {
+                this.audioManager.playSFX(AUDIO_SFX.CHALLENGE_SUCCESS);
+            } else {
+                this.audioManager.playSFX(AUDIO_SFX.CHALLENGE_FAIL);
+            }
+        }
         this.markEventCooldown();
 
         if (getState().progress >= 100 && this.onProgressCompletion) {
@@ -354,3 +383,13 @@ export class EventManager {
         }
     }
 }
+
+let globalEventManager = null;
+
+export const setGlobalEventManager = (manager) => {
+    globalEventManager = manager;
+};
+
+export const getGlobalEventManager = () => {
+    return globalEventManager;
+};

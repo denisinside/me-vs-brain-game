@@ -3,17 +3,32 @@ export const GAME_DURATION_SECONDS = 180; // 3 minutes
 
 // Progress and gameplay
 export const PROGRESS_PER_CLICK = 0.4;
-export const EVENT_CHANCE_PER_SECOND = 0.1;
 
 // Focus mechanics
 export const FOCUS_DECAY_RATE = 1;
-export const FOCUS_RECOVERY_RATE = 3;
+export const FOCUS_RECOVERY_RATE = 4;
 export const FOCUS_CLICK_PENALTY = 1;
 
 // Phone distraction
-export const PHONE_DISTRACTION_THRESHOLD = 45;
+export const PHONE_DISTRACTION_THRESHOLD = 40;
 export const PHONE_ESCAPE_CLICKS = 20;
 export const PHONE_TRIGGER_CHANCE = 0.15;
+
+// Feature flags
+export const ENABLE_TIME_FREEZE_ON_EVENTS = true;
+export const QTE_DURATION_MULTIPLIER = 1;
+export const CHALLENGE_DURATION_MULTIPLIER = 1.6;
+
+// Event probabilities 
+export const STORY_EVENT_TRIGGER_PROBABILITY = 0.13;
+export const CHALLENGE_TRIGGER_PROBABILITY = 0.2;
+
+// Individual challenge weights (higher = more frequent)
+export const CHALLENGE_WEIGHTS = {
+    key_spam_challenge: 3,     // Most common - simple and fast
+    combo_input_challenge: 2,  // Medium frequency
+    typing_challenge: 1,       // Least common - more complex
+};
 
 // Video files
 export const VIDEOS = {
@@ -62,4 +77,24 @@ export const DOM_IDS = {
     END_MESSAGE: 'end-message',
     END_DETAILS: 'end-details',
     THOUGHTS: ['thought-1', 'thought-2', 'thought-3', 'thought-4'],
+};
+
+// Audio assets
+export const AUDIO_TRACKS = {
+    CALM: ['events/bg_calm_loop1.mp3', 'events/bg_calm_loop2.mp3'],
+    DEADLINE: ['events/bg_deadline_loop.mp3'],
+};
+
+export const AUDIO_SFX = {
+    WORK_CLICK: 'events/mouse-click.wav',
+    PHONE_ALERT: 'events/phone-notification.mp3',
+    PHONE_CLEAR: 'events/phone-notification-2.mp3',
+    FOCUS_REFRESH: 'events/focus_refresh.mp3',
+    CHALLENGE_SUCCESS: 'events/success.wav',
+    CHALLENGE_FAIL: 'events/failure-trumpets-2.mp3',
+    CHALLENGE_MISTAKE: 'events/wrong-answer.wav',
+    WINDOWS_ERROR: 'events/windows_error.mp3',
+    PANIC: 'events/aaaahhhh_sfx.mp3',
+    VICTORY: 'events/success_trumpets.mp3',
+    DEFEAT: 'events/failure-trumpets.mp3',
 };

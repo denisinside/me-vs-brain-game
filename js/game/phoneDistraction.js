@@ -7,22 +7,27 @@ import {
     decrementPhoneClicks,
     adjustFocus
 } from '../state/gameState.js';
-import { PHONE_ESCAPE_CLICKS, VIDEOS } from '../config/constants.js';
+import { PHONE_ESCAPE_CLICKS, VIDEOS, AUDIO_SFX } from '../config/constants.js';
 import { switchVideo } from '../utils/videoManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
 import { randomElement } from '../utils/helpers.js';
+import { getAudioManager } from '../managers/audioManager.js';
 
+const PHONE_AUDIO_KEY = 'phone-distraction';
 let phoneMockupTimeout = null;
 
 /**
  * List of TikTok video files
  */
 const TIKTOK_VIDEOS = [
-    'tiktok1.mp4', 'tiktok2.mp4', 'tiktok3.mp4', 'tiktok4.mp4', 'tiktok5.mp4',
-    'tiktok6.mp4', 'tiktok7.mp4', 'tiktok8.mp4', 'tiktok9.MP4', 'tiktok10.mp4',
-    'tiktok11.mp4', 'tiktok12.mp4', 'tiktok13.mp4', 'tiktok14.mp4', 'tiktok15.MP4',
-    'tiktok16.mp4', 'tiktok17.mp4', 'tiktok18.mp4', 'tiktok19.mp4', 'tiktok20.mp4'
-];
+        'tiktok1.mp4', 'tiktok2.mp4', 'tiktok3.mp4', 'tiktok4.mp4', 'tiktok5.mp4',
+            'tiktok6.mp4', 'tiktok7.mp4', 'tiktok8.mp4', 'tiktok9.MP4', 'tiktok10.mp4',
+            'tiktok11.mp4', 'tiktok12.mp4', 'tiktok13.mp4', 'tiktok14.mp4', 'tiktok15.MP4',
+            'tiktok16.mp4', 'tiktok17.mp4', 'tiktok18.mp4', 'tiktok19.mp4', 'tiktok20.mp4',
+            'tiktok21.mp4', 'tiktok22.mp4', 'tiktok23.mp4', 'tiktok24.mp4', 'tiktok25.mp4',
+            'tiktok26.mp4', 'tiktok27.mp4', 'tiktok28.mp4', 'tiktok29.mp4', 'tiktok30.mp4',
+            'tiktok31.mp4', 'tiktok32.mp4'
+    ];
 
 /**
  * Show phone mockup with random TikTok video
@@ -98,6 +103,9 @@ export const triggerPhoneDistraction = () => {
     setEventActive(true);
     setPhoneClicksRemaining(PHONE_ESCAPE_CLICKS);
     setEventMessage('Ти заліз у телефон! Швидко клацай, щоб вирватись!');
+    const audioManager = getAudioManager();
+    audioManager?.duckBackground(PHONE_AUDIO_KEY, 400);
+    audioManager?.playSFX(AUDIO_SFX.PHONE_ALERT);
 
     const workButton = getElement('workButton');
     if (workButton) {
@@ -122,6 +130,16 @@ export const triggerPhoneDistraction = () => {
 const handlePhoneEscape = () => {
     const state = getState();
     if (!state.isPhoneDistracted) return;
+
+    // Анімація кнопки при натисканні
+    const workButton = getElement('workButton');
+    if (workButton) {
+        workButton.classList.remove('button-press-intense');
+        workButton.classList.add('button-press-intense');
+        setTimeout(() => {
+            workButton.classList.remove('button-press-intense');
+        }, 200);
+    }
 
     decrementPhoneClicks();
 
@@ -151,10 +169,13 @@ const endPhoneDistraction = () => {
     if (workButton) {
         // Enable button if no blocking conditions are active
         workButton.disabled = state.progress >= 100 || state.isPaused || state.isEventActive || state.isPhoneDistracted || state.workDisabled;
-        workButton.textContent = 'Працювати (натискай!)';
+        workButton.textContent = 'Працювати!';
         workButton.onclick = null;
     }
 
     switchVideo(VIDEOS.IDLE, true);
+    const audioManager = getAudioManager();
+    audioManager?.unduckBackground(PHONE_AUDIO_KEY, 400);
+    audioManager?.playSFX(AUDIO_SFX.FOCUS_REFRESH);
     updateUI();
 };

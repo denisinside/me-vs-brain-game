@@ -5,14 +5,15 @@ import {
     handleWorkClick,
     handleStartClick,
     handleRestartClick,
-    handlePauseClick
+    handlePauseClick,
+    handleFullscreenToggle
 } from './controllers/buttonHandlers.js';
 import { setupAutoPause, bindTimerControl } from './controllers/pauseManager.js';
 import { TimerManager } from './managers/timerManager.js';
 import { ProgressManager } from './managers/progressManager.js';
-import { EventManager } from './managers/eventManager.js';
+import { EventManager, setGlobalEventManager } from './managers/eventManager.js';
 import { InputHandler } from './managers/inputHandler.js';
-import { AudioManager } from './managers/audioManager.js';
+import { AudioManager, setGlobalAudioManager } from './managers/audioManager.js';
 import { SaveManager } from './managers/saveManager.js';
 import { Analytics } from './managers/analytics.js';
 import { initGameController } from './core/gameController.js';
@@ -30,10 +31,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     initUIManager(elements);
 
     const audioManager = new AudioManager();
+    setGlobalAudioManager(audioManager);
     const timerManager = new TimerManager({});
     const progressManager = new ProgressManager();
     const inputHandler = new InputHandler({ elements, timerManager });
     const eventManager = new EventManager({ timerManager, progressManager, audioManager, inputHandler });
+    setGlobalEventManager(eventManager);
     const saveManager = new SaveManager();
     const analytics = new Analytics();
     bindTimerControl(timerManager);
@@ -177,19 +180,22 @@ function setupEventListeners(elements) {
         elements.pauseButton.addEventListener('click', handlePauseClick);
     }
 
-    // ESC key to pause/unpause
+    // ESC key to pause/unpause, F key to toggle fullscreen
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             const gameShell = elements.gameShell;
             const startScreen = elements.startScreen;
             const endScreen = elements.endScreen;
-            
+
             // Only toggle pause if game is running (not on start or end screen)
             if (gameShell && !gameShell.classList.contains('hidden') &&
                 startScreen && startScreen.classList.contains('hidden') &&
                 endScreen && endScreen.classList.contains('hidden')) {
                 handlePauseClick();
             }
+        } else if (e.key.toLowerCase() === 'f') {
+            // Toggle fullscreen with F key
+            handleFullscreenToggle();
         }
     });
 }

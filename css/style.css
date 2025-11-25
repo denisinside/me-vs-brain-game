@@ -10,6 +10,10 @@ body {
     padding: 20px 10px;
     cursor: url('../assets/images/cursor.png'), auto;
     overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 #app {
@@ -339,6 +343,14 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+img {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
+}
+
 .controls {
     display: flex;
     justify-content: center;
@@ -371,12 +383,31 @@ button:hover {
 button:active {
     transform: translateY(1px);
     box-shadow: 0 10px 18px rgba(15, 94, 255, 0.26);
+    filter: brightness(0.8);
+    transition: all 0.05s ease;
 }
 
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+/* Анімація швидкого натискання для челенджів */
+@keyframes buttonPress {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(0.7); }
+    100% { filter: brightness(1); }
+}
+
+button.button-press {
+    animation: buttonPress 0.15s ease-out;
+}
+
+/* Додаткова анімація для інтенсивного натискання */
+button.button-press-intense {
+    animation: buttonPress 0.1s ease-out;
+    animation-iteration-count: 2;
 }
 
 .screen.overlay {

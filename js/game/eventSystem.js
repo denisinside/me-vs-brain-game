@@ -7,9 +7,12 @@ import {
     setCurrentEvent,
     getState
 } from '../state/gameState.js';
+import { QTE_DURATION_MULTIPLIER } from '../config/constants.js';
 import { switchVideo, onVideoEnd } from '../utils/videoManager.js';
 import { updateUI, getElement } from '../ui/uiManager.js';
+import { getAudioManager } from '../managers/audioManager.js';
 
+const EVENT_AUDIO_KEY = 'story-event';
 let currentEventData = null;
 let currentOutcome = null;
 let qteClicksRemaining = 0;
@@ -36,6 +39,8 @@ export const startEvent = (eventData) => {
     currentEventData = eventData;
     setEventActive(true);
     setCurrentEvent(eventData);
+    const audioManager = getAudioManager();
+    audioManager?.duckBackground(EVENT_AUDIO_KEY, 500);
 
     // Disable work button
     const workButton = getElement('workButton');
@@ -191,12 +196,19 @@ const selectChoice = (choice) => {
 const startQTE = (eventData) => {
     // Don't hide event info - keep it visible during QTE
 
-    const qteSettings = eventData.qteSettings;
-    qteClicksRemaining = qteSettings.clicksToWin;
+    const qteSettings = eventData.qteSettings || {};
+    qteClicksRemaining = qteSettings.clicksToWin ?? 0;
+    const durationMultiplier = Number.isFinite(QTE_DURATION_MULTIPLIER) && QTE_DURATION_MULTIPLIER > 0
+        ? QTE_DURATION_MULTIPLIER
+        : 1;
+    const baseDuration = Math.max(0, qteSettings.duration ?? 0);
+    const adjustedDuration = Math.max(0, Math.round(baseDuration * durationMultiplier));
 
     // Generate random key (using key codes for layout-independent detection)
-    const keyCodes = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyA', 'KeyS', 'KeyD', 'KeyF'];
-    const keyLabels = ['Q', 'W', 'E', 'R', 'A', 'S', 'D', 'F'];
+    // Uses KeyboardEvent.code for physical key position - works with any keyboard layout
+    // Use the same key set as challenges for consistency
+    const keyCodes = ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyJ', 'KeyK', 'KeyL', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU'];
+    const keyLabels = ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U'];
     const randomIndex = Math.floor(Math.random() * keyCodes.length);
     currentQteKey = keyCodes[randomIndex]; // Store key code for detection
     currentQteDisplayKey = keyLabels[randomIndex]; // Store label for display
@@ -217,7 +229,7 @@ const startQTE = (eventData) => {
     // Start timeout
     qteTimeout = setTimeout(() => {
         qteFailure(eventData);
-    }, qteSettings.duration);
+    }, adjustedDuration || baseDuration);
 
     updateQTEDisplay();
 };
@@ -350,6 +362,8 @@ const endEvent = () => {
 
     // Switch back to idle video
     switchVideo('idle.mp4', true);
+    const audioManager = getAudioManager();
+    audioManager?.unduckBackground(EVENT_AUDIO_KEY, 500);
 
     // Re-enable work button if appropriate
     const state = getState();

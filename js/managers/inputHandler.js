@@ -1,4 +1,31 @@
+import { AUDIO_SFX, CHALLENGE_DURATION_MULTIPLIER, GAME_DURATION_SECONDS } from '../config/constants.js';
+import { setChallengeActive, getTimeLeft } from '../state/gameState.js';
+import { getAudioManager } from './audioManager.js';
+
 const IGNORE_KEYS = ['Shift', 'Alt', 'Control', 'Meta', 'Escape'];
+
+const playMistakeSound = () => {
+    const audioManager = getAudioManager();
+    audioManager?.playSFX(AUDIO_SFX.CHALLENGE_MISTAKE);
+};
+
+/**
+ * Розраховує динамічний множник тривалості challenge залежно від залишкового часу
+ * Використовує базовий CHALLENGE_DURATION_MULTIPLIER з динамічними коефіцієнтами
+ */
+const getDynamicDurationMultiplier = () => {
+    const timeLeft = getTimeLeft();
+
+    if (timeLeft >= 120) {
+        return CHALLENGE_DURATION_MULTIPLIER;
+    } else if (timeLeft >= 60) {
+        const ratio = (timeLeft - 60) / 60;
+        const coefficient = 0.5 + ratio * 0.5;
+        return CHALLENGE_DURATION_MULTIPLIER * coefficient;
+    } else {
+        return 1.0;
+    }
+};
 
 const getMatchingPrefixLength = (value, target) => {
     const max = Math.min(value.length, target.length);
@@ -31,6 +58,28 @@ export class InputHandler {
         this.clearTimers();
     }
 
+    /**
+     * Показує всі елементи челенджів (після приховування при завершенні гри)
+     */
+    showChallengeElements() {
+        const challengeElements = [
+            'challengeContainer',
+            'challengeTitle',
+            'challengeInstructions',
+            'challengeSequence',
+            'challengeInput',
+            'challengeProgress',
+            'challengeTimer'
+        ];
+
+        challengeElements.forEach(id => {
+            const element = this.elements[id];
+            if (element) {
+                element.classList.remove('hidden');
+            }
+        });
+    }
+
     startMiniChallenge(challengeDef) {
         if (!challengeDef) {
             return Promise.resolve({ success: false });
@@ -48,10 +97,18 @@ export class InputHandler {
             rawInputValue: '',
         };
 
+        setChallengeActive(true);
+
         this.renderChallenge();
 
-        this.remainingMs = challengeDef.durationMs;
-        this.challengeTimeout = setTimeout(() => this.finish(false, 'timeout'), challengeDef.durationMs);
+        const multiplier = getDynamicDurationMultiplier();
+        const baseDuration = Math.max(0, Number(challengeDef.durationMs) || 0);
+        const adjustedDuration = Math.max(0, Math.round(baseDuration * multiplier));
+        const effectiveDuration = adjustedDuration || baseDuration;
+
+        this.remainingMs = effectiveDuration;
+        this.activeChallenge.totalDurationMs = effectiveDuration;
+        this.challengeTimeout = setTimeout(() => this.finish(false, 'timeout'), effectiveDuration);
         this.countdownInterval = setInterval(() => this.updateTimer(), 100);
 
         return new Promise((resolve) => {
@@ -73,10 +130,15 @@ export class InputHandler {
     }
 
     handleKeySpam(event) {
-        const expected = this.activeChallenge.targetKey?.toUpperCase();
+        const expected = this.activeChallenge.targetKey;
         if (!expected) return;
-        const pressed = event.key.toUpperCase();
+        const pressed = event.code;
         if (pressed !== expected) return;
+
+        if (event.repeat) return;
+
+        // Додаємо анімацію кнопки при успішному натисканні
+        this.animateButtonPress();
 
         this.activeChallenge.hits += 1;
         const ratio = this.activeChallenge.hits / this.activeChallenge.requiredHits;
@@ -88,13 +150,16 @@ export class InputHandler {
     }
 
     handleComboInput(event) {
-        const sequence = this.activeChallenge.sequence || [];
+        const sequence = this.activeChallenge.sequence || []; // Array of key codes like ['KeyA', 'KeyS', 'KeyD']
         const currentIndex = this.activeChallenge.index;
         const expected = sequence[currentIndex];
         if (!expected) return;
-        const pressed = event.key.toUpperCase();
+        const pressed = event.code; // Use key code for layout-independent detection
 
         if (pressed === expected) {
+            // Додаємо анімацію кнопки при успішному натисканні
+            this.animateButtonPress();
+
             this.activeChallenge.index += 1;
             this.highlightSequence(this.activeChallenge.index);
             const ratio = this.activeChallenge.index / sequence.length;
@@ -104,6 +169,7 @@ export class InputHandler {
             }
         } else {
             this.activeChallenge.mistakes += 1;
+            playMistakeSound();
             if (this.activeChallenge.allowedMistakes !== undefined &&
                 this.activeChallenge.mistakes > this.activeChallenge.allowedMistakes) {
                 this.finish(false, 'combo-fail');
@@ -172,6 +238,7 @@ export class InputHandler {
     handleTypingMistake() {
         if (!this.activeChallenge) return;
         this.activeChallenge.mistakes += 1;
+        playMistakeSound();
         if (this.activeChallenge.penaltyPerMistake && this.timerManager) {
             this.timerManager.applyTimePenalty(this.activeChallenge.penaltyPerMistake);
         }
@@ -221,7 +288,7 @@ export class InputHandler {
             span.textContent = this.activeChallenge.targetLabel ?? this.activeChallenge.targetKey;
             container.appendChild(span);
         } else if (type === 'combo_input_challenge') {
-            (this.activeChallenge.sequence || []).forEach((key) => {
+            (this.activeChallenge.sequenceLabels || this.activeChallenge.sequence || []).forEach((key) => {
                 const span = document.createElement('span');
                 span.textContent = key;
                 container.appendChild(span);
@@ -245,11 +312,46 @@ export class InputHandler {
         if (this.activeChallenge.type === 'typing_challenge') {
             input.classList.remove('hidden');
             input.value = '';
+
+            const focusInput = () => {
+                input.focus();
+                input._blurCount = 0;
+            };
+
             input.focus();
+            input._blurCount = 0;
+            setTimeout(focusInput, 50);
+            setTimeout(focusInput, 150);
+            setTimeout(focusInput, 300);
+
+            const handleBlur = () => {
+                if (!input._blurCount) input._blurCount = 0;
+                input._blurCount++;
+
+                if (input._blurCount <= 3) {
+                    setTimeout(() => {
+                        if (this.activeChallenge?.type === 'typing_challenge') {
+                            input.focus();
+                        }
+                    }, 10);
+                }
+            };
+
+            input.addEventListener('blur', handleBlur);
+
+            input._blurHandler = handleBlur;
+
             this.attachTypingListener();
         } else {
             input.classList.add('hidden');
             input.value = '';
+
+            if (input._blurHandler) {
+                input.removeEventListener('blur', input._blurHandler);
+                delete input._blurHandler;
+            }
+            delete input._blurCount;
+
             this.detachTypingListener();
         }
     }
@@ -302,8 +404,30 @@ export class InputHandler {
         this.activeChallenge = null;
         this.challengeResolve = null;
 
+        setChallengeActive(false);
+
         if (resolve) {
             resolve({ success, ...payload });
         }
+    }
+
+    /**
+     * Анімація натискання кнопки для візуального фідбеку
+     */
+    animateButtonPress(intense = false) {
+        const workButton = document.getElementById('work-button');
+        if (!workButton) return;
+
+        // Видаляємо попередні класи анімації
+        workButton.classList.remove('button-press', 'button-press-intense');
+
+        // Додаємо новий клас анімації
+        const animationClass = intense ? 'button-press-intense' : 'button-press';
+        workButton.classList.add(animationClass);
+
+        // Видаляємо клас після завершення анімації
+        setTimeout(() => {
+            workButton.classList.remove(animationClass);
+        }, intense ? 200 : 150);
     }
 }

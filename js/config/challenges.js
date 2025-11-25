@@ -1,17 +1,40 @@
 import { randomElement } from '../utils/helpers.js';
 
-const KEY_SET = ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'П', 'Р', 'О'];
+const KEY_CODES = [
+    'KeyA', 'KeyS', 'KeyD', 'KeyJ', 'KeyK', 'KeyL',
+    'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU'
+];
+
+const KEY_LABELS = [
+    'A', 'S', 'D', 'J', 'K', 'L',
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U'
+];
+
 const PHRASES = [
-    'фокус',
-    'кодити до ранку',
-    'жодних тік-токів',
+    'кодити далі',
+    'жодних тіктоків',
     'зроби дедлайн',
+    'чистий фокус',
+    'тільки робота',
+    'лише код',
+    'стальовий фокус',
+    'жодних відволікань',
+    'час працювати',
+    'стисни терміни',
+    'код і кава',
+    'ти сильний',
+    'тримайся',
+    'фокус тримай',
+    'завжди код',
+    'переможи дедлайн',
+    'без паніки',
+    'роби швидко',
 ];
 
 const comboPools = [
-    ['W', 'S', 'D'],
-    ['J', 'K', 'L'],
-    ['Q', 'W', 'E', 'R'],
+    ['KeyW', 'KeyS', 'KeyD'],
+    ['KeyJ', 'KeyK', 'KeyL'],
+    ['KeyQ', 'KeyW', 'KeyE', 'KeyR'],
 ];
 
 export const CHALLENGE_DEFS = {
@@ -19,28 +42,36 @@ export const CHALLENGE_DEFS = {
         type: 'key_spam_challenge',
         title: 'Спам-клавіша',
         instructions: 'Бий по вказаній клавіші, поки лічильник не дійде до нуля.',
-        durationMs: 5000,
-        requiredHits: 18,
-        success: { progressAdjustment: 4 },
-        fail: { timePenalty: 12 },
+        durationMs: 4000,
+        requiredHits: 15,
+        success: { progressAdjustment: 1.5 },
+        fail: { timePenalty: 8 },
     },
     combo_input_challenge: {
         type: 'combo_input_challenge',
         title: 'Комбо-ввід',
         instructions: 'Повтори послідовність клавіш у правильному порядку.',
-        durationMs: 7000,
-        success: { progressAdjustment: 6 },
-        fail: { timePenalty: 10 },
+        durationMs: 3000,
+        success: { progressAdjustment: 2.5 },
+        fail: { timePenalty: 7 },
     },
     typing_challenge: {
         type: 'typing_challenge',
         title: 'Швидкий друк',
         instructions: 'Набери фразу без помилок. Кожна помилка з’їдає час.',
-        durationMs: 9000,
+        durationMs: 6000,
         penaltyPerMistake: 2,
-        success: { progressAdjustment: 8 },
-        fail: { timePenalty: 8 },
+        success: { progressAdjustment: 4 },
+        fail: { timePenalty: 5 },
     },
+};
+
+const getRandomKey = () => {
+    const index = Math.floor(Math.random() * KEY_CODES.length);
+    return {
+        code: KEY_CODES[index],
+        label: KEY_LABELS[index]
+    };
 };
 
 export const buildChallenge = (id) => {
@@ -48,11 +79,11 @@ export const buildChallenge = (id) => {
     if (!template) return null;
 
     if (template.type === 'key_spam_challenge') {
-        const key = randomElement(KEY_SET);
+        const key = getRandomKey();
         return {
             ...template,
-            targetKey: key.toUpperCase(),
-            targetLabel: key.toUpperCase(),
+            targetKey: key.code,
+            targetLabel: key.label,
         };
     }
 
@@ -63,9 +94,14 @@ export const buildChallenge = (id) => {
         while (sequence.length < length) {
             sequence.push(randomElement(pool));
         }
+
         return {
             ...template,
-            sequence: sequence.map((key) => key.toUpperCase()),
+            sequence: sequence, // Array of key codes
+            sequenceLabels: sequence.map(code => {
+                const index = KEY_CODES.indexOf(code);
+                return index >= 0 ? KEY_LABELS[index] : code;
+            }), // Array of display labels
             allowedMistakes: 1,
         };
     }
